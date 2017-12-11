@@ -1,21 +1,30 @@
 """
 Python client API for cwlogs daemon
 """
-import time, socket, simplejson
+import time, socket, json
 
-import pykoa
+try:
+    # Python 2
+    UNICODE_TYPE = unicode
+except NameError:
+    # Python 3
+    UNICODE_TYPE = str
 
 
 def log_event(message):
     """
     Log the @message string to cloudwatch logs, using the current time.
-    message: str (valid utf8 required) or unicode.
+    message: bytes (valid utf8 required) or unicode.
     Raises: exception if the message is too long or invalid utf8
     Raises: exception if the daemon is down or too backlogged
     Returns when the message was queued to the daemon's memory queue.
     (Does not mean the message is safe in cloudwatch)
     """
-    assert isinstance(message, basestring)
+    # python3 json library can't handle bytes, so preemptively decode utf-8
+    if isinstance(message, bytes):
+        message = message.decode("utf-8")
+    assert isinstance(message, UNICODE_TYPE)
+
     req = dict()
     req["message"] = message
     req["timestamp"] = int(time.time() * 1000)
@@ -42,23 +51,24 @@ def _connect():
 
 
 def _request(req):
-    if pykoa.isdebug():
-        pykoa.debug("_request %r", req)
+    buf = json.dumps(req, indent=None) + "\n"
+    # dumps returns unicode with python3, but sock requires bytes
+    if isinstance(buf, UNICODE_TYPE):
+        buf = buf.encode("utf-8")
 
-    buf = simplejson.dumps(req, indent=None) + "\n"
     sock = _connect()
     sock.sendall(buf)
 
-    resp = ""
+    resp = u""
     while True:
         chunk = sock.recv(4000)
         if not chunk:
             raise Exception("no data")
-        resp += chunk
-        if resp.endswith("\n"):
+        resp += chunk.decode("utf-8")
+        if resp.endswith(u"\n"):
             break
 
-    d = simplejson.loads(resp[:-1])
+    d = json.loads(resp[:-1])
     if isinstance(d, dict):
         status = d["status"]
         if status == "ok":
@@ -70,12 +80,20 @@ def _request(req):
 
 
 def _test():
-    log_event("hello there dude")
-    log_event("bad bytes \xff\x00\x01")
-    #for i in xrange(300000):
-        #log_event("load event %d" % i)
-    #log_event(12345)  # forwards an assertion exception
-    #log_event("h"*300000)  # forwards InvalidMessage
+    # simple ascii test, confirms ascii str works for python2 and 3
+    log_event("Simple ascii: Hello world!")
+
+    # non ascii bytes test
+    byte_string = (b"Non-ascii utf-8 bytes: "
+                   b"\xe3\x83\x8f\xe3\x83\xad\xe3\x83\xbc\xe3\x83\xbb"
+                   b"\xe3\x83\xaf\xe3\x83\xbc\xe3\x83\xab\xe3\x83\x89")
+    assert isinstance(byte_string, bytes)
+    log_event(byte_string)
+
+    # non ascii unicode test
+    unicode_string = byte_string.decode("utf-8").replace("bytes", "unicode")
+    assert isinstance(unicode_string, UNICODE_TYPE)
+    log_event(unicode_string)
 
 
 if __name__ == "__main__":
