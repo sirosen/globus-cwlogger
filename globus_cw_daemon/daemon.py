@@ -1,26 +1,17 @@
 #!/usr/bin/python
 """
 Upload messages to cloud watch logs
-Usage: cwlogs.py [restart]
-If restart, kill existing daemon before starting.
 """
-import os, sys, socket, logging, time, errno, threading
-import simplejson
+import os, sys, socket, logging, time, errno, threading, json, traceback
 
-import pykoa
-from pykoa.koaexception import script_exception_handler
-from pykoa.lib import daemon
-from pykoa.lib import cwlogs
-
-
-# Don't log unhandled exceptions to ourself - it hangs.
-pykoa.log_unhandled_to_cloudwatch = False
+import cwlogs
+import config
 
 
 # Note that the total memory limit is double this:
 # * the flush thread can be flushing MAX_EVENT_QUEUE_LEN
 # * the front end thread can be receiving MAX_EVENT_QUEUE_LEN
-MAX_EVENT_QUEUE_LEN = pykoa.get_misc_conf("cwlogs.max_event_queue_len", 100000)
+MAX_EVENT_QUEUE_LEN = 100000
 
 # The sucky thing about unix domain sockets.
 # When this is full, clients will go into a retry sleep loop
@@ -29,16 +20,28 @@ SOCK_LISTEN_BACKLOG = 1024
 # How long to sleep between successful queue flushes
 FLUSH_WAIT_SECS = 1
 
-
-_log = logging.getLogger("pykoa.daemons.cwlogs")
-
-# For dev instances - also log locally
-_do_local_log = pykoa.get_misc_conf("cwlogs.do_local_log", 0)
+_log = logging.getLogger(__name__)
 
 # Data shared with flush thread
 _g_lock = threading.Lock()
 _g_queue = []   # List of Events
 _g_nr_dropped = 0
+
+
+def _script_exception_handler(fn):
+    """
+    If any Exception is raised by fn(),
+    (excludes SystemExit and KeyboardInterrupt),
+    log the error before raising.
+    """
+    def wrapper(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except Exception:
+            _log.error("script_exception_handler")
+            _log.error(traceback.format_exc())
+            raise
+    return wrapper
 
 
 def _print(m):
@@ -79,7 +82,7 @@ def _flush_thread_main(writer):
 
 def _get_drop_event(nr_dropped):
     data = dict(type="cwlogs.dropped", count=nr_dropped)
-    ret = cwlogs.Event(timestamp=None, message=simplejson.dumps(data))
+    ret = cwlogs.Event(timestamp=None, message=json.dumps(data))
     return ret
 
 
@@ -98,7 +101,7 @@ def do_request(sock):
         if buf.endswith("\n"):
             break
 
-    d = simplejson.loads(buf[:-1])
+    d = json.loads(buf[:-1])
     _log.debug("request: %r", d)
 
     try:
@@ -109,14 +112,16 @@ def do_request(sock):
         response = dict(status="error", message=repr(e))
 
     _log.debug("response: %r", response)
-    buf = simplejson.dumps(response, indent=None) + "\n"
+    buf = json.dumps(response, indent=None) + "\n"
     sock.sendall(buf)
 
 
 def _handle_request(d):
     event = cwlogs.Event(timestamp=d["timestamp"], message=d["message"])
-    if _do_local_log:
-        _log.info("%s %s", event.timestamp, event.unicode_message)
+
+    # do a local log if on debug level logging
+    _log.debug("%s %s", event.timestamp, event.unicode_message)
+
     with _g_lock:
         if len(_g_queue) < MAX_EVENT_QUEUE_LEN:
             _g_queue.append(event)
@@ -150,10 +155,13 @@ def run_request_loop(listen_sock):
             _log.exception("unhandled in socket_thread_main!")
 
 
-@script_exception_handler
-def main(args):
-    if pykoa.get_misc_conf("cwlogs.debug", 0):
-        pykoa.setdebug(True)
+@_script_exception_handler
+def main():
+
+    root_logger = logging.getLogger()
+
+    log_level = config.get_string("local_log_level")
+    root_logger.setLevel(log_level.upper())
 
     # Change logging to use thread ids
     formatter = logging.Formatter(
@@ -161,17 +169,9 @@ def main(args):
                     "%(process)d:%(thread)d " + \
                     "%(name)s: %(message)s",
             datefmt='%Y-%m-%d %H:%M:%S')
-    koa_logger = logging.getLogger('pykoa')
-    for handler in koa_logger.handlers:
-        handler.setFormatter(formatter)
 
-    if args:
-        if args[0] == "restart":
-            _print("cwlogs: killing existing daemons...")
-            daemon.kill_old_daemon("cwlogs.py")
-        else:
-            _print(__doc__)
-            sys.exit(1)
+    for handler in root_logger.handlers:
+        handler.setFormatter(formatter)
 
     _print("cwlogs: starting...")
     _log.info("starting")
@@ -191,14 +191,13 @@ def main(args):
     listen_sock.listen(SOCK_LISTEN_BACKLOG)
 
     stream_name = os.uname()[1]  # hostname
-    group_name = pykoa.get_misc_conf("cwlogs.log_group_name", "")
-    if not group_name:
-        raise Exception("need log_group_name")
+
+    try:
+        group_name = config.get_string("group_name")
+    except KeyError:
+        raise Exception("no group_name found in /etc/cwlogd.ini")
 
     writer = cwlogs.LogWriter(group_name, stream_name)
-
-    _log.info("daemonizing")
-    daemon.daemon()
 
     flush_thread = threading.Thread(target=flush_thread_main, args=(writer,)) 
     flush_thread.daemon = True
@@ -208,4 +207,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
