@@ -3,7 +3,7 @@ Description=Globus CloudWatch Logger Daemon
 After=syslog.target
 
 [Service]
-ExecStart=globus_cw_daemon
+ExecStart=/usr/local/bin/globus_cw_daemon
 
 Restart=on-failure
 KillSignal=SIGQUIT
