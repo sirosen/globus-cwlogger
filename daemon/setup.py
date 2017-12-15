@@ -9,7 +9,9 @@ setup(
     ],
 
     entry_points={
-        'console_scripts': ['globus_cw_daemon = globus_cw_daemon.daemon:main']
+        'console_scripts': [
+            'globus_cw_daemon = globus_cw_daemon.daemon:main',
+            'globus_cw_daemon_install = install.install:main']
     },
 
     # descriptive info, non-critical
