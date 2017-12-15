@@ -1,8 +1,7 @@
 """
 Provides access to /etc/cwlogd.ini config values
 """
-import configparser
-
+import ConfigParser as configparser
 
 CONFIG_PATH = "/etc/cwlogd.ini"
 _config = None
@@ -27,5 +26,5 @@ def get_string(key):
     A KeyError will be raised if no constant with the given key exists.
     A ValueError will be raised if the constant cannot be a string.
     """
-    value = _get_config()["general"][key]
+    value = _get_config().get("general", key)
     return str(value)

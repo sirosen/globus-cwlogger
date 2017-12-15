@@ -2,10 +2,10 @@
 """
 Upload messages to cloud watch logs
 """
-import os, sys, socket, logging, time, errno, threading, json, traceback
+import os, sys, socket, logging, time, errno, threading, json
 
-import cwlogs
-import config
+import globus_cw_daemon.cwlogs as cwlogs
+import globus_cw_daemon.config as config
 
 
 # Note that the total memory limit is double this:
@@ -26,22 +26,6 @@ _log = logging.getLogger(__name__)
 _g_lock = threading.Lock()
 _g_queue = []   # List of Events
 _g_nr_dropped = 0
-
-
-def _script_exception_handler(fn):
-    """
-    If any Exception is raised by fn(),
-    (excludes SystemExit and KeyboardInterrupt),
-    log the error before raising.
-    """
-    def wrapper(*args, **kwargs):
-        try:
-            return fn(*args, **kwargs)
-        except Exception:
-            _log.error("script_exception_handler")
-            _log.error(traceback.format_exc())
-            raise
-    return wrapper
 
 
 def _print(m):
@@ -155,7 +139,6 @@ def run_request_loop(listen_sock):
             _log.exception("unhandled in socket_thread_main!")
 
 
-@_script_exception_handler
 def main():
 
     root_logger = logging.getLogger()
