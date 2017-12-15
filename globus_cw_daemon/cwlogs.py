@@ -17,7 +17,7 @@ MAX_BATCH_BYTES = 800000            # Officially 1MB
 MAX_BATCH_RECORDS = 5000            # Officially 10,000
 MAX_BATCH_RANGE_HOURS = 6           # Officially 24 hours
 
-_log = logging.getLogger("pykoa.lib.cwlogs")
+_log = logging.getLogger(__name__)
 
 
 class InvalidMessage(Exception): pass
