@@ -11,8 +11,10 @@ setup(
     entry_points={
         'console_scripts': [
             'globus_cw_daemon = globus_cw_daemon.daemon:main',
-            'globus_cw_daemon_install = install.install:main']
+            'globus_cw_daemon_install = globus_cw_daemon_install.install:main']
     },
+
+    include_package_data = True,
 
     # descriptive info, non-critical
     description="Daemon for Globus CloudWatch Logger",
