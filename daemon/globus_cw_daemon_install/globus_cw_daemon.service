@@ -7,7 +7,7 @@ ExecStart=/usr/local/bin/globus_cw_daemon
 
 Restart=on-failure
 KillSignal=SIGQUIT
-Type=notify
+Type=simple
 StandardError=journal
 NotifyAccess=all
 
