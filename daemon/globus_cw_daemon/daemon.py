@@ -141,20 +141,12 @@ def run_request_loop(listen_sock):
 
 def main():
 
-    root_logger = logging.getLogger()
-
-    log_level = config.get_string("local_log_level")
-    root_logger.setLevel(log_level.upper())
-
-    # Change logging to use thread ids
-    formatter = logging.Formatter(
-            fmt="%(asctime)s.%(msecs)03d %(levelname)s "\
-                    "%(process)d:%(thread)d " + \
-                    "%(name)s: %(message)s",
-            datefmt='%Y-%m-%d %H:%M:%S')
-
-    for handler in root_logger.handlers:
-        handler.setFormatter(formatter)
+    # send local logs to stderr
+    local_log_level = config.get_string("local_log_level").upper()
+    logging.basicConfig(
+        level=local_log_level, stream=sys.stderr, datefmt='%Y-%m-%d %H:%M:%S',
+        fmt=("%(asctime)s.%(msecs)03d %(levelname)s %(process)d:%(thread)d "
+             "%(name)s: %(message)s"))
 
     _print("cwlogs: starting...")
     _log.info("starting")
@@ -182,7 +174,7 @@ def main():
 
     writer = cwlogs.LogWriter(group_name, stream_name)
 
-    flush_thread = threading.Thread(target=flush_thread_main, args=(writer,)) 
+    flush_thread = threading.Thread(target=flush_thread_main, args=(writer,))
     flush_thread.daemon = True
     flush_thread.start()
 
