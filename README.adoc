@@ -1,0 +1,23 @@
+== globus-cloudwatch-logger
+
+Tool for globus services to log to aws cloudwatch
+
+==== Install and enable Daemon
+
+----
+sudo pip install git+https://github.com/globus/globus-cwlogger#subdirectory=daemon
+sudo globus_cw_daemon_install <cloudwatch_group_name>
+sudo systemctl enable globus_cw_daemon.service
+----
+
+==== Install and use Client Module
+
+----
+sudo pip install git+https://github.com/globus/globus-cwlogger#subdirectory=client
+----
+
+----
+from globus_cw_client.client import log_event
+
+log_event("some message string")
+----
