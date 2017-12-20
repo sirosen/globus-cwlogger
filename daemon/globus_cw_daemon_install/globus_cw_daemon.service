@@ -1,0 +1,12 @@
+[Unit]
+Description=Globus CloudWatch Logger Daemon
+
+[Service]
+ExecStart=/usr/local/bin/globus_cw_daemon
+
+Restart=on-failure
+Type=simple
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,2 @@
+include globus_cw_daemon_install/default-config.ini
+include globus_cw_daemon_install/globus_cw_daemon.service
