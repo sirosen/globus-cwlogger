@@ -1,4 +1,4 @@
-== globus-cloudwatch-logger
+= globus-cloudwatch-logger
 
 Tool for globus services to log to aws cloudwatch
 
