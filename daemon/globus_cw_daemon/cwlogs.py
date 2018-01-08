@@ -156,11 +156,10 @@ class LogWriter(object):
             except boto.logs.exceptions.DataAlreadyAcceptedException as e:
                 _log.info("DataAlreadyAcceptedException")
                 self.sequence_token = e.body["expectedSequenceToken"]
-                return 
+                return
             except boto.logs.exceptions.InvalidSequenceTokenException as e:
                 _log.info("InvalidSequenceTokenException")
                 self.sequence_token = e.body["expectedSequenceToken"]
-                return 
             except Exception as e:
                 _log.error("error: %r", e)
                 time.sleep(3)
