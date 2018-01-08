@@ -165,12 +165,21 @@ def main():
     _print("cwlogs: started ok")
     listen_sock.listen(SOCK_LISTEN_BACKLOG)
 
-    stream_name = os.uname()[1]  # hostname
+    try:
+        stream_name = config.get_string("stream_name")
+    except KeyError:
+        try:
+            stream_name = os.readlink("/var/lib/cloud/instance").split("/")[-1]
+        except OSError:
+            raise Exception(
+                "no stream_name found in /etc/cwlogd.ini, and "
+                "no ec2 instance_id found in /var/lib/cloud/instance")
 
     try:
         group_name = config.get_string("group_name")
     except KeyError:
-        raise Exception("no group_name found in /etc/cwlogd.ini")
+        raise Exception("no group_name found in /etc/cwlogd.ini, have you "
+                        "run globus_cw_daemon_install?")
 
     writer = cwlogs.LogWriter(group_name, stream_name)
 

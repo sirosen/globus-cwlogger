@@ -26,5 +26,8 @@ def get_string(key):
     A KeyError will be raised if no constant with the given key exists.
     A ValueError will be raised if the constant cannot be a string.
     """
-    value = _get_config().get("general", key)
-    return str(value)
+    try:
+        value = _get_config().get("general", key)
+        return str(value)
+    except Exception:
+        raise KeyError("key %s not found in %s" % (key, CONFIG_PATH))
