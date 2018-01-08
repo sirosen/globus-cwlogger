@@ -6,7 +6,7 @@ Tool for globus services to log to aws cloudwatch
 
 ----
 sudo pip install git+https://github.com/globus/globus-cwlogger#subdirectory=daemon
-sudo globus_cw_daemon_install <cloudwatch_group_name>
+sudo globus_cw_daemon_install <group_name> --stream_name <optional_stream_name>
 sudo systemctl enable globus_cw_daemon.service
 sudo service globus_cw_deamon
 ----
