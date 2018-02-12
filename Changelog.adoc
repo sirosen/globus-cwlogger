@@ -1,0 +1,12 @@
+= GLOBUS CW-LOGGER Changelog
+
+
+== beta-2
+
+* add audit daemon heartbeats on queue flushes
+* update daemon dropped events to type audit
+
+
+== beta-1
+
+* first version
