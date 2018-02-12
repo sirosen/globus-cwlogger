@@ -27,6 +27,11 @@ _g_lock = threading.Lock()
 _g_queue = []   # List of Events
 _g_nr_dropped = 0
 
+# get constant instance_id on start
+try:
+    INSTANCE_ID = os.readlink("/var/lib/cloud/instance").split("/")[-1]
+except OSError:
+    INSTANCE_ID = None
 
 def _print(m):
     sys.stdout.write(m + "\n")
@@ -51,11 +56,15 @@ def _flush_thread_main(writer):
         _log.info("checking queue")
         with _g_lock:
             new_data = _g_queue
+            nr_found = len(new_data)
             nr_dropped = _g_nr_dropped
             _g_queue = []
             _g_nr_dropped = 0
 
-        _log.info("found %d events", len(new_data))
+        _log.info("found %d events", nr_found)
+        event = _get_heartbeat_event(nr_found)
+        new_data.append(event)
+
         if nr_dropped:
             _log.warn("dropped %d events", nr_dropped)
             event = _get_drop_event(nr_dropped)
@@ -65,7 +74,15 @@ def _flush_thread_main(writer):
 
 
 def _get_drop_event(nr_dropped):
-    data = dict(type="cwlogs.dropped", count=nr_dropped)
+    data = dict(type="audit", subtype="cwlogs.dropped",
+                dropped=nr_dropped, instance_id=INSTANCE_ID)
+    ret = cwlogs.Event(timestamp=None, message=json.dumps(data))
+    return ret
+
+
+def _get_heartbeat_event(nr_found):
+    data = dict(type="audit", subtype="cwlogs.heartbeat",
+                queue_len=nr_found, instance_id=INSTANCE_ID)
     ret = cwlogs.Event(timestamp=None, message=json.dumps(data))
     return ret
 
@@ -168,12 +185,12 @@ def main():
     try:
         stream_name = config.get_string("stream_name")
     except KeyError:
-        try:
-            stream_name = os.readlink("/var/lib/cloud/instance").split("/")[-1]
-        except OSError:
+        if not INSTANCE_ID:
             raise Exception(
                 "no stream_name found in /etc/cwlogd.ini, and "
                 "no ec2 instance_id found in /var/lib/cloud/instance")
+        else:
+            stream_name = INSTANCE_ID
 
     try:
         group_name = config.get_string("group_name")
