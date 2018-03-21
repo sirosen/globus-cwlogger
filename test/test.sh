@@ -17,14 +17,29 @@ sudo systemctl daemon-reload
 sudo service globus_cw_daemon restart
 sudo service globus_cw_daemon status
 
-# python 2 client test in venv
+# run client_test.py with python2
 virtualenv venv
 venv/bin/pip install git+https://github.com/globus/globus-cwlogger#subdirectory=client
 venv/bin/python client_test.py
 rm -rf venv
 
-# python 3 client test in venv
+# run client_test.py with python3
 virtualenv venv --python=python3
 venv/bin/pip install git+https://github.com/globus/globus-cwlogger#subdirectory=client
 venv/bin/python client_test.py
+rm -rf venv
+
+# stop the daemon and run fail_test.py
+sudo service globus_cw_daemon stop
+
+# with python2
+virtualenv venv
+venv/bin/pip install git+https://github.com/globus/globus-cwlogger#subdirectory=client
+venv/bin/python fail_test.py
+rm -rf venv
+
+# with python3
+virtualenv venv --python=python3
+venv/bin/pip install git+https://github.com/globus/globus-cwlogger#subdirectory=client
+venv/bin/python fail_test.py
 rm -rf venv

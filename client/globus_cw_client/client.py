@@ -11,10 +11,12 @@ except NameError:
     UNICODE_TYPE = str
 
 
-def log_event(message):
+def log_event(message, retries=10, wait=0.1):
     """
     Log the @message string to cloudwatch logs, using the current time.
     message: bytes (valid utf8 required) or unicode.
+    retries: number of retries to make on failed socket connection
+    wait: number of seconds to wait between retries
     Raises: exception if the message is too long or invalid utf8
     Raises: exception if the daemon is down or too backlogged
     Returns when the message was queued to the daemon's memory queue.
@@ -25,19 +27,26 @@ def log_event(message):
         message = message.decode("utf-8")
     assert isinstance(message, UNICODE_TYPE)
 
+    assert(type(retries) == int)
+    assert(retries >= 0)
+
+    assert(type(wait) == int or type(wait) == float)
+    assert(wait >= 0)
+
     req = dict()
     req["message"] = message
     req["timestamp"] = int(time.time() * 1000)
-    _request(req)
+    _request(req, retries, wait)
 
 
-def _connect():
+def _connect(retries, wait):
     """
-    Try to connect to the daemon 
+    Try to connect to the daemon @retries + 1 times,
+    waiting @wait seconds between tries
     Raise: Exception if max attempts exceeded
     """
     addr = "\0org.globus.cwlogs"
-    for i in range(60):
+    for i in range(retries+1):
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM, 0)
         try:
             sock.connect(addr)
@@ -45,18 +54,18 @@ def _connect():
             pass
         else:
             return sock
-        time.sleep(0.5)  # seconds
+        time.sleep(wait)  # seconds
 
     raise Exception("couldn't connect to cw")
 
 
-def _request(req):
+def _request(req, retries, wait):
     buf = json.dumps(req, indent=None) + "\n"
     # dumps returns unicode with python3, but sock requires bytes
     if isinstance(buf, UNICODE_TYPE):
         buf = buf.encode("utf-8")
 
-    sock = _connect()
+    sock = _connect(retries, wait)
     sock.sendall(buf)
 
     resp = u""
