@@ -33,6 +33,7 @@ try:
 except OSError:
     INSTANCE_ID = None
 
+
 def _print(m):
     sys.stdout.write(m + "\n")
     sys.stdout.flush()
@@ -51,9 +52,16 @@ def _flush_thread_main(writer):
     global _g_nr_dropped
     _log.info("flush_thread_main started")
 
+    heartbeats = config.get_bool("heartbeats")
+    hb_interval = config.get_int("heartbeat_interval")
+    time_since_hb = 0
+
     while True:
         time.sleep(FLUSH_WAIT_SECS)
+        if heartbeats:
+            time_since_hb += FLUSH_WAIT_SECS
         _log.info("checking queue")
+
         with _g_lock:
             new_data = _g_queue
             nr_found = len(new_data)
@@ -62,8 +70,13 @@ def _flush_thread_main(writer):
             _g_nr_dropped = 0
 
         _log.info("found %d events", nr_found)
-        event = _get_heartbeat_event(nr_found)
-        new_data.append(event)
+
+        # if heartbeats are on and heartbeat_interval seconds have passed
+        # then send a heartbeat to cw logs
+        if heartbeats and time_since_hb >= hb_interval:
+            hb_event = _get_heartbeat_event()
+            new_data.append(hb_event)
+            time_since_hb = 0
 
         if nr_dropped:
             _log.warn("dropped %d events", nr_dropped)
@@ -80,9 +93,9 @@ def _get_drop_event(nr_dropped):
     return ret
 
 
-def _get_heartbeat_event(nr_found):
+def _get_heartbeat_event():
     data = dict(type="audit", subtype="cwlogs.heartbeat",
-                queue_len=nr_found, instance_id=INSTANCE_ID)
+                instance_id=INSTANCE_ID)
     ret = cwlogs.Event(timestamp=None, message=json.dumps(data))
     return ret
 
