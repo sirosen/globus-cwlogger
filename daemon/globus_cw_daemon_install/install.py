@@ -19,12 +19,27 @@ def main():
     parser.add_argument("group_name",
                         help="Name of the existing CloudWatch log group "
                         "to log to.")
-    parser.add_argument("--stream_name",
-                        help="Optional stream to override the daemon using "
-                             "the current ec2 instance id.")
+    parser.add_argument("--stream-name",
+                        help="Specify a stream name. Default is the current "
+                             "ec2 instance id.")
+    parser.add_argument("--heartbeat-interval", type=int,
+                        help="Specify the time in seconds between heartbeats. "
+                             "Default is 60 seconds.")
+    parser.add_argument("--no-heartbeats", action="store_true",
+                        help="Turn off heartbeats.")
+
     args = parser.parse_args()
     group_name = args.group_name
     stream_name = args.stream_name
+    heartbeat_interval = args.heartbeat_interval
+    no_heartbeats = args.no_heartbeats
+
+    if heartbeat_interval is not None and heartbeat_interval <= 0:
+        raise ValueError("heartbeat interval must be > 0")
+
+    if no_heartbeats and heartbeat_interval:
+        raise ValueError(
+            "Attempting to set heartbeat interval and turn off heartbeats")
 
     # read default-config.ini
     config = configparser.ConfigParser()
@@ -34,6 +49,10 @@ def main():
     config.set("general", "group_name", group_name)
     if stream_name:
         config.set("general", "stream_name", stream_name)
+    if heartbeat_interval:
+        config.set("general", "heartbeat_interval", heartbeat_interval)
+    if no_heartbeats:
+        config.set("general", "heartbeats", False)
 
     # write config to /etc/cwlogd.ini
     config.write(open("/etc/cwlogd.ini", "w"))

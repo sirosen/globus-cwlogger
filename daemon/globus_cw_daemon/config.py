@@ -24,10 +24,32 @@ def get_string(key):
     """
     Given a key returns the value of that key in config as a string.
     A KeyError will be raised if no constant with the given key exists.
-    A ValueError will be raised if the constant cannot be a string.
     """
     try:
-        value = _get_config().get("general", key)
-        return str(value)
-    except Exception:
+        return _get_config().get("general", key)
+    except configparser.NoOptionError:
+        raise KeyError("key %s not found in %s" % (key, CONFIG_PATH))
+
+
+def get_bool(key):
+    """
+    Given a key returns the value of that key in config as a boolean.
+    A KeyError will be raised if no constant with the given key exists.
+    A ValueError will be raised if the constant cannot be a boolean.
+    """
+    try:
+        return _get_config().getboolean("general", key)
+    except configparser.NoOptionError:
+        raise KeyError("key %s not found in %s" % (key, CONFIG_PATH))
+
+
+def get_int(key):
+    """
+    Given a key returns the value of that key in config as an int.
+    A KeyError will be raised if no constant with the given key exists.
+    A ValueError will be raised if the constant cannot be an int.
+    """
+    try:
+        return _get_config().getint("general", key)
+    except configparser.NoOptionError:
         raise KeyError("key %s not found in %s" % (key, CONFIG_PATH))
