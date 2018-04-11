@@ -1,6 +1,14 @@
 = GLOBUS CW-LOGGER Changelog
 
 
+== beta-3
+
+* allow specifying client retry behavior
+* lower default retry time to 10 retries at 0.1s each
+* allow configuring daemon heartbeat behavior
+* increase default time between heartbeats to 60s
+
+
 == beta-2
 
 * add audit daemon heartbeats on queue flushes
