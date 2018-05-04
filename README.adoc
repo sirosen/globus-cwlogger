@@ -21,4 +21,9 @@ pip install git+https://github.com/globus/globus-cwlogger#subdirectory=client
 from globus_cw_client.client import log_event
 
 log_event("some message string")
+
+# logs with retries, for when the daemon is down or unreachable
+# default is retries=10, wait=0.1
+log_event("message which fails fast", retries=0, wait=0)
+log_event("message which waits up to 60 seconds", retries=60, wait=1)
 ----
