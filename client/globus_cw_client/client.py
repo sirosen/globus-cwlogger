@@ -56,7 +56,7 @@ def _connect(retries, wait):
             return sock
         time.sleep(wait)  # seconds
 
-    raise CWLoggerConnectionError(err)
+    raise CWLoggerConnectionError("couldn't connect to cw", err)
 
 
 def _request(req, retries, wait):
