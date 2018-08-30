@@ -50,13 +50,13 @@ def _connect(retries, wait):
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM, 0)
         try:
             sock.connect(addr)
-        except Exception:
+        except Exception as err:
             pass
         else:
             return sock
         time.sleep(wait)  # seconds
 
-    raise Exception("couldn't connect to cw")
+    raise CWLoggerConnectionError(err)
 
 
 def _request(req, retries, wait):
@@ -83,6 +83,26 @@ def _request(req, retries, wait):
         if status == "ok":
             return
         else:
-            raise Exception("forwarded error", d["message"])
+            raise CWLoggerDaemonError("forwarded error", d["message"])
     else:
-        raise Exception("unknown response type", d)
+        raise CWLoggerDaemonError("unknown response type", d)
+
+
+class CWLoggerError(Exception):
+    """
+    Base class for exceptions raised by the CWLogger client.
+    """
+
+
+class CWLoggerConnectionError(CWLoggerError):
+    """
+    Raised when the CWLogger client is unable to talk
+    to the daemon.
+    """
+
+
+class CWLoggerDaemonError(CWLoggerError):
+    """
+    Raised for errors returned to the client
+    by the daemon.
+    """
