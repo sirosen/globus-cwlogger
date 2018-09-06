@@ -88,6 +88,12 @@ def _request(req, retries, wait):
         raise CWLoggerDaemonError("unknown response type", d)
 
 
+# Ignore (swallow) these exceptions at your own risk.
+# CWLoggerDaemonError can be caused by many things, including but not limited to: bad IAM policy, a killed / failed daemon background thread, AWS throttling, invalid length/encoding.
+# Ignore only if you have some other mechanism (e.g. a lambda / cloudwatch / heartbeat monitor) to ensure logs are properly configured and working, and/or write logs to disk manually.
+# Note that even in the absence of exceptions, messages may still be lost - the daemon has a very large memory queue and works asynchronously.
+
+
 class CWLoggerError(Exception):
     """
     Base class for exceptions raised by the CWLogger client.
