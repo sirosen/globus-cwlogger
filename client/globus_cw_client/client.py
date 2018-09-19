@@ -50,13 +50,13 @@ def _connect(retries, wait):
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM, 0)
         try:
             sock.connect(addr)
-        except Exception:
+        except Exception as err:
             pass
         else:
             return sock
         time.sleep(wait)  # seconds
 
-    raise Exception("couldn't connect to cw")
+    raise CWLoggerConnectionError("couldn't connect to cw", err)
 
 
 def _request(req, retries, wait):
@@ -83,6 +83,32 @@ def _request(req, retries, wait):
         if status == "ok":
             return
         else:
-            raise Exception("forwarded error", d["message"])
+            raise CWLoggerDaemonError("forwarded error", d["message"])
     else:
-        raise Exception("unknown response type", d)
+        raise CWLoggerDaemonError("unknown response type", d)
+
+
+# Ignore (swallow) these exceptions at your own risk.
+# CWLoggerDaemonError can be caused by many things, including but not limited to: bad IAM policy, a killed / failed daemon background thread, AWS throttling, invalid length/encoding.
+# Ignore only if you have some other mechanism (e.g. a lambda / cloudwatch / heartbeat monitor) to ensure logs are properly configured and working, and/or write logs to disk manually.
+# Note that even in the absence of exceptions, messages may still be lost - the daemon has a very large memory queue and works asynchronously.
+
+
+class CWLoggerError(Exception):
+    """
+    Base class for exceptions raised by the CWLogger client.
+    """
+
+
+class CWLoggerConnectionError(CWLoggerError):
+    """
+    Raised when the CWLogger client is unable to talk
+    to the daemon.
+    """
+
+
+class CWLoggerDaemonError(CWLoggerError):
+    """
+    Raised for errors returned to the client
+    by the daemon.
+    """
