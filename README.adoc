@@ -2,6 +2,8 @@
 
 Tool for globus services to log to aws cloudwatch
 
+Maintainers: aaschaer, sirosen
+
 ==== Install, enable, and restart Daemon (Python 2)
 
 ----
