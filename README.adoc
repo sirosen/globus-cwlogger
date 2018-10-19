@@ -8,9 +8,9 @@ Maintainers: aaschaer, sirosen
 
 ----
 sudo pip install git+https://github.com/globus/globus-cwlogger#subdirectory=daemon
-sudo globus_cw_daemon_install <group_name> --stream_name <optional_stream_name>
-sudo systemctl enable globus_cw_daemon.service
-sudo service globus_cw_deamon restart
+sudo globus_cw_daemon_install <group_name> --stream-name <optional_stream_name>
+sudo systemctl -q enable globus_cw_daemon.service
+sudo systemctl start globus_cw_daemon
 ----
 
 ==== Install and use Client Module (Python 2 or 3)
