@@ -36,7 +36,7 @@ def log_event(message, retries=10, wait=0.1):
     req = dict()
     req["message"] = message
     req["timestamp"] = int(time.time() * 1000)
-    _request(req, retries, wait)
+    return _request(req, retries, wait)
 
 
 def _connect(retries, wait):
@@ -81,7 +81,7 @@ def _request(req, retries, wait):
     if isinstance(d, dict):
         status = d["status"]
         if status == "ok":
-            return
+            return d
         else:
             raise CWLoggerDaemonError("forwarded error", d["message"])
     else:

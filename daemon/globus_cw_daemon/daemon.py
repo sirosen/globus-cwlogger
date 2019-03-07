@@ -100,6 +100,22 @@ def _get_heartbeat_event():
     return ret
 
 
+def _health_info():
+    """
+    compute daemon health info
+    based only on the visible state of the frontend queue
+    """
+    q_len = len(_g_queue)  # no lock, but safe
+    q_pct = q_len / float(MAX_EVENT_QUEUE_LEN)
+    health_color = "green"
+    if q_pct > 0.7:
+        health_color = "red"
+    elif q_pct > 0.5:
+        health_color = "yellow"
+    return dict(queue_length=q_len, queue_percent_full=q_pct,
+                status=health_color)
+
+
 def do_request(sock):
     """
     @sock: a client socket connection
@@ -120,7 +136,7 @@ def do_request(sock):
 
     try:
         _handle_request(d)
-        response = dict(status="ok")
+        response = dict(status="ok", health=_health_info())
     except Exception as e:
         _log.exception("error %r", e)
         response = dict(status="error", message=repr(e))
