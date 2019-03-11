@@ -93,27 +93,22 @@ def _get_drop_event(nr_dropped):
     return ret
 
 
-def _get_heartbeat_event():
-    data = dict(type="audit", subtype="cwlogs.heartbeat",
-                instance_id=INSTANCE_ID)
-    ret = cwlogs.Event(timestamp=None, message=json.dumps(data))
-    return ret
-
-
 def _health_info():
     """
     compute daemon health info
     based only on the visible state of the frontend queue
     """
     q_len = len(_g_queue)  # no lock, but safe
-    q_pct = q_len / float(MAX_EVENT_QUEUE_LEN)
-    health_color = "green"
-    if q_pct > 0.7:
-        health_color = "red"
-    elif q_pct > 0.5:
-        health_color = "yellow"
-    return dict(queue_length=q_len, queue_percent_full=q_pct,
-                status=health_color)
+    q_pct = (q_len / float(MAX_EVENT_QUEUE_LEN)) * 100
+    return dict(queue_length=q_len, queue_percent_full=q_pct)
+
+
+def _get_heartbeat_event():
+    data = dict(type="audit", subtype="cwlogs.heartbeat",
+                instance_id=INSTANCE_ID,
+                health=_health_info())
+    ret = cwlogs.Event(timestamp=None, message=json.dumps(data))
+    return ret
 
 
 def do_request(sock):
