@@ -74,7 +74,7 @@ def _flush_thread_main(writer):
         # if heartbeats are on and heartbeat_interval seconds have passed
         # then send a heartbeat to cw logs
         if heartbeats and time_since_hb >= hb_interval:
-            hb_event = _get_heartbeat_event()
+            hb_event = _get_heartbeat_event(nr_found)
             new_data.append(hb_event)
             time_since_hb = 0
 
@@ -93,20 +93,24 @@ def _get_drop_event(nr_dropped):
     return ret
 
 
-def _health_info():
+def _health_info(q_len=None):
     """
     compute daemon health info
     based only on the visible state of the frontend queue
+
+    the queue length can be passed by the caller (for visibility during flush)
+    or it will be taken from len(_g_queue)
     """
-    q_len = len(_g_queue)  # no lock, but safe
+    if q_len is None:
+        q_len = len(_g_queue)  # no lock, but safe
     q_pct = (q_len / float(MAX_EVENT_QUEUE_LEN)) * 100
     return dict(queue_length=q_len, queue_percent_full=q_pct)
 
 
-def _get_heartbeat_event():
+def _get_heartbeat_event(nr_found):
     data = dict(type="audit", subtype="cwlogs.heartbeat",
                 instance_id=INSTANCE_ID,
-                health=_health_info())
+                health=_health_info(nr_found))
     ret = cwlogs.Event(timestamp=None, message=json.dumps(data))
     return ret
 
