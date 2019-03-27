@@ -1,6 +1,15 @@
 = GLOBUS CW-LOGGER Changelog
 
 
+== beta-4
+
+* raise custom Exception classes in client
+* add maintainers list
+* fix Python3 Exception scope handling
+* improve test suite with helpful print statements
+* add queue fullness to heartbeats and client responses
+
+
 == beta-3
 
 * allow specifying client retry behavior
