@@ -1,8 +1,10 @@
-= globus-cloudwatch-logger
+= globus-cwlogger
 
-Tool for globus services to log to aws cloudwatch
+globus-cwlogger is a simple client and daemon for writing log data to
+AWS CloudWatch Logs as an alternative to the AWS CloudWatch Agent.
 
-Maintainers: aaschaer, sirosen
+Although globus-cwlogger is an open source project, it is not intended for
+general use. We don't recommend that third parties depend upon it.
 
 ==== Install, enable, and restart Daemon (Python 2)
 

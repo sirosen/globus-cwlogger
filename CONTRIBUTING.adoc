@@ -1,0 +1,42 @@
+Contributing to globus-cwlogger
+===============================
+
+Guidelines
+----------
+
+- Maintaining a stable client and server is our primary goal, so we favor
+  carefully planned changes and slow releases
+
+- We are conservative with the featureset we offer
+
+- The daemon only supports one python version (currently python2, will switch
+  to python3)
+
+- The client supports both python2 and python3 until at least python2 EOL
+
+Linting & Testing
+-----------------
+
+- No linting is currently setup, but we are considering adding `flake8`,
+  `black`, and `isort` to our requirements.
+
+- "Simulated" automated testing (e.g. with a mocked cwlogs API) is not a
+  priority for this project
+
+  - We want to test in the realistic context of a server running the daemon,
+    writing to cwlogs
+
+  - Lacking mock-based unit-tests does not reflect a lack of investment in
+    testing -- enhancements to the testing tools are very much welcome!
+
+NOTE: Please do not reformat code cosmetically without discussing it
+beforehand. We do want to apply some code checkers and fixers, but as part of
+a carefully considered effort.
+
+
+Running a Release
+-----------------
+
+- Update the changelog to reflect the latest released version.
+- Cut a release branch (e.g. `release/beta-4`)
+- Notify via email that there's a new release, link to latest changelog
