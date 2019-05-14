@@ -149,7 +149,7 @@ class LogWriter(object):
                         self.stream_name, 
                         events, 
                         sequence_token=self.sequence_token)
-                _log.info("flush ok")
+                _log.debug("flush ok")
                 self.sequence_token = ret["nextSequenceToken"]
                 #raise Exception("test")
                 return

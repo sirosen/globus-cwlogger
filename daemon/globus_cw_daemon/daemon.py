@@ -6,6 +6,7 @@ import os, sys, socket, logging, time, errno, threading, json
 
 import globus_cw_daemon.cwlogs as cwlogs
 import globus_cw_daemon.config as config
+import globus_cw_daemon.local_logging as local_logging
 
 
 # Note that the total memory limit is double this:
@@ -60,7 +61,7 @@ def _flush_thread_main(writer):
         time.sleep(FLUSH_WAIT_SECS)
         if heartbeats:
             time_since_hb += FLUSH_WAIT_SECS
-        _log.info("checking queue")
+        _log.debug("checking queue")
 
         with _g_lock:
             new_data = _g_queue
@@ -69,11 +70,12 @@ def _flush_thread_main(writer):
             _g_queue = []
             _g_nr_dropped = 0
 
-        _log.info("found %d events", nr_found)
+        _log.debug("found %d events", nr_found)
 
         # if heartbeats are on and heartbeat_interval seconds have passed
         # then send a heartbeat to cw logs
         if heartbeats and time_since_hb >= hb_interval:
+            _log.info("sending heartbeat event")
             hb_event = _get_heartbeat_event(nr_found)
             new_data.append(hb_event)
             time_since_hb = 0
@@ -185,13 +187,8 @@ def run_request_loop(listen_sock):
 
 
 def main():
-
     # send local logs to stderr
-    local_log_level = config.get_string("local_log_level").upper()
-    logging.basicConfig(
-        level=local_log_level, stream=sys.stderr, datefmt='%Y-%m-%d %H:%M:%S',
-        fmt=("%(asctime)s.%(msecs)03d %(levelname)s %(process)d:%(thread)d "
-             "%(name)s: %(message)s"))
+    local_logging.configure()
 
     _print("cwlogs: starting...")
     _log.info("starting")
