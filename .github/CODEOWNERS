@@ -1,0 +1,6 @@
+# CODEOWNERS reference:
+#   https://help.github.com/en/articles/about-code-owners
+#
+# sirosen, aaschaer are the current project maintainers, so they should be made
+# "owners" on all files
+* @sirosen, @aaschaer
