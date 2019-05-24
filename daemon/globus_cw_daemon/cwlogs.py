@@ -132,8 +132,8 @@ class LogWriter(object):
                     break
                 events.pop()
 
-            _log.info("flushing batch, bytes=%d, recs=%d",
-                    batch.nr_bytes, len(batch.records))
+            _log.debug("flushing batch, bytes=%d, recs=%d",
+                       batch.nr_bytes, len(batch.records))
             self._flush_events(batch.get_records_for_boto())
 
 
