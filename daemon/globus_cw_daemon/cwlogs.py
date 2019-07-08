@@ -3,11 +3,10 @@ Upload logs to cloudwatch.
 - log records too old are discarded by AWS (tooOldLogEventEndIndex)
 - log records in the future are discarded by AWS (tooNewLogEventStartIndex)
 """
-import os
 import time
 import logging
 
-import boto
+import boto3
 
 
 MAX_EVENT_BYTES = (256 * 1024)
@@ -20,7 +19,8 @@ MAX_BATCH_RANGE_HOURS = 6           # Officially 24 hours
 _log = logging.getLogger(__name__)
 
 
-class InvalidMessage(Exception): pass
+class InvalidMessage(Exception):
+    pass
 
 
 class Event(object):
@@ -29,12 +29,12 @@ class Event(object):
         Raise: InvalidMessage if message is too long
         Raise: UnicodeDecodeError if message is not valid utf8
         """
-        if isinstance(message, str):
+        if isinstance(message, bytes):
             message = message.decode("utf-8")
         if timestamp is None:
             timestamp = int(time.time() * 1000)
         assert isinstance(timestamp, int)
-        assert isinstance(message, unicode)
+        assert isinstance(message, str)
         assert timestamp >= 0
         encoded_message = message.encode("utf-8")
         self.timestamp = timestamp
@@ -44,12 +44,10 @@ class Event(object):
             raise InvalidMessage("message too large")
 
 
-
 class _Batch(object):
     def __init__(self):
         self.nr_bytes = 0
         self.records = []
-
 
     def add(self, record):
         """
@@ -72,14 +70,11 @@ class _Batch(object):
         self.nr_bytes += record.size_in_bytes
         return True
 
-
     def get_records_for_boto(self):
         ret = []
         for r in self.records:
-            ret.append(dict(timestamp=r.timestamp,
-                message=r.unicode_message))
+            ret.append(dict(timestamp=r.timestamp, message=r.unicode_message))
         return ret
-
 
     @staticmethod
     def time_diff_exceeded(a, b):
@@ -89,7 +84,7 @@ class _Batch(object):
 
 
 class LogWriter(object):
-    def __init__(self, group_name, stream_name):
+    def __init__(self, group_name, stream_name, aws_region=None):
         """
         Create the @stream_name if it doesn't exist.
         Raise: exception if boto can't connect.
@@ -98,28 +93,20 @@ class LogWriter(object):
 
         # Keep a connection around for performance.  boto is smart enough
         # to refresh role creds right before they expire (see provider.py).
-        self.conn = boto.connect_logs()
+        self.client = boto3.client('logs', region_name=(aws_region or "us-east-1"))
 
         self.group_name = group_name
         self.stream_name = stream_name
-        self.sequence_token = None
+        # will be passed on the first call and caught as InvalidSequenceTokenError
+        self.sequence_token = 'invalid'
 
         try:
-            self.conn.create_log_stream(self.group_name, self.stream_name)
-        except boto.logs.exceptions.ResourceAlreadyExistsException:
+            self.client.create_log_stream(
+                logGroupName=self.group_name,
+                logStreamName=self.stream_name
+            )
+        except self.client.exceptions.ResourceAlreadyExistsException:
             pass
-
-        # It's easier just to pick up InvalidSequenceTokenException.
-        # (Not documented by AWS, though)
-        """
-        streams = self.conn.describe_log_streams(group_name)
-        for stream in streams["logStreams"]:
-            stream_name = stream["logStreamName"]
-            if stream_name == self.stream_name:
-                # NB: Newly created streams dont have this attribute
-                self.sequence_token = stream.get("uploadSequenceToken", None)
-        """
-
 
     def upload_events(self, events):
         events = list(events)
@@ -136,7 +123,6 @@ class LogWriter(object):
                        batch.nr_bytes, len(batch.records))
             self._flush_events(batch.get_records_for_boto())
 
-
     def _flush_events(self, events):
         """
         Upload a single batch of events.
@@ -145,21 +131,21 @@ class LogWriter(object):
         assert len(events)
         while True:
             try:
-                ret = self.conn.put_log_events(self.group_name, 
-                        self.stream_name, 
-                        events, 
-                        sequence_token=self.sequence_token)
+                ret = self.client.put_log_events(
+                    logGroupName=self.group_name,
+                    logStreamName=self.stream_name,
+                    logEvents=events,
+                    sequenceToken=self.sequence_token
+                )
                 _log.debug("flush ok")
                 self.sequence_token = ret["nextSequenceToken"]
-                #raise Exception("test")
                 return
-            except boto.logs.exceptions.DataAlreadyAcceptedException as e:
-                _log.info("DataAlreadyAcceptedException")
-                self.sequence_token = e.body["expectedSequenceToken"]
+            except (self.client.exceptions.DataAlreadyAcceptedException,
+                    self.client.exceptions.InvalidSequenceTokenException) as e:
+                self.sequence_token = e.response["Error"]["Message"].split()[-1]
+                _log.info("{}, sequence_token={}".format(
+                    e.response["Error"]["Code"], self.sequence_token))
                 return
-            except boto.logs.exceptions.InvalidSequenceTokenException as e:
-                _log.info("InvalidSequenceTokenException")
-                self.sequence_token = e.body["expectedSequenceToken"]
             except Exception as e:
                 _log.error("error: %r", e)
                 time.sleep(3)
@@ -176,7 +162,7 @@ def test():
     def hours(n):
         return 3600*n*1000
 
-    writer = LogWriter("transfer-dev-tapi")
+    writer = LogWriter("cwlogger-test", "test-stream")
 
     events = []
     events.append(Event(now_ms(), "Test Event 1"))
@@ -190,11 +176,11 @@ def test():
     events.append(Event(now_ms(), u"\u00a9" * 131059))
 
     # Invalid utf8
-    #events.append(Event(now_ms(), "\xff\xff"))
+    # events.append(Event(now_ms(), "\xff\xff"))
 
     # These are rejected by AWS
-    #events.append(Event(now_ms(), u"\n" * 262119, enforce_limit=False))
-    #events.append(Event(now_ms(), u"\u00a9" * 131060, enforce_limit=False))
+    # events.append(Event(now_ms(), u"\n" * 262119, enforce_limit=False))
+    # events.append(Event(now_ms(), u"\u00a9" * 131060, enforce_limit=False))
     writer.upload_events(events)
 
 

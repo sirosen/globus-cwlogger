@@ -7,7 +7,7 @@ Given a group_name and an optional stream_name as arguments:
 import os
 import shutil
 import argparse
-import ConfigParser as configparser
+import configparser
 
 
 def main():

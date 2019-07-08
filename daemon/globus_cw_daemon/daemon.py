@@ -1,8 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 """
 Upload messages to cloud watch logs
 """
-import os, sys, socket, logging, time, errno, threading, json
+import os
+import sys
+import socket
+import logging
+import time
+import errno
+import threading
+import json
 
 import globus_cw_daemon.cwlogs as cwlogs
 import globus_cw_daemon.config as config
@@ -123,16 +130,16 @@ def do_request(sock):
     Post: response is sent but @sock is left open
     """
     # Read <json_data>\n
-    buf = ""
+    buf = b""
     while True:
         chunk = sock.recv(4000)
         if not chunk:
             raise Exception("no data")
         buf += chunk
-        if buf.endswith("\n"):
+        if buf.endswith(b"\n"):
             break
 
-    d = json.loads(buf[:-1])
+    d = json.loads(buf[:-1].decode("utf-8"))
     _log.debug("request: %r", d)
 
     try:
@@ -143,7 +150,7 @@ def do_request(sock):
         response = dict(status="error", message=repr(e))
 
     _log.debug("response: %r", response)
-    buf = json.dumps(response, indent=None) + "\n"
+    buf = json.dumps(response, indent=None).encode("utf-8") + b"\n"
     sock.sendall(buf)
 
 
@@ -218,12 +225,17 @@ def main():
             stream_name = INSTANCE_ID
 
     try:
+        aws_region = config.get_string("aws_region")
+    except KeyError:
+        aws_region = None
+
+    try:
         group_name = config.get_string("group_name")
     except KeyError:
         raise Exception("no group_name found in /etc/cwlogd.ini, have you "
                         "run globus_cw_daemon_install?")
 
-    writer = cwlogs.LogWriter(group_name, stream_name)
+    writer = cwlogs.LogWriter(group_name, stream_name, aws_region=aws_region)
 
     flush_thread = threading.Thread(target=flush_thread_main, args=(writer,))
     flush_thread.daemon = True

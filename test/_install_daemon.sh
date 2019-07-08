@@ -1,24 +1,19 @@
 #!/bin/bash
 
-# get a branch to test or default to master
-if [ $# -eq 1 ]
-then
-    branch=$1
-else
-    # default to master
-    branch="master"
-fi
+installpath="$1"
 
 # cleanup any existing daemon or venv
 sudo rm -f /etc/systemd/system/globus_cw_daemon.service
 sudo rm -f /etc/cwlogd.ini
-sudo pip uninstall globus_cw_daemon -y
+sudo -H pip uninstall globus_cw_daemon -y
+sudo -H pip3 uninstall globus_cw_daemon -y
 rm -rf venv
 set -e
 
 # setup the daemon as root
-sudo pip install git+https://github.com/globus/globus-cwlogger@$branch#subdirectory=daemon
-sudo globus_cw_daemon_install cwlogger-test --stream-name test-stream
+sudo -H pip3 install "$installpath"
+sudo -H globus_cw_daemon_install cwlogger-test --stream-name test-stream
+sudo sed -i 's/local_log_level = info/local_log_level = debug/' /etc/cwlogd.ini
 sudo systemctl daemon-reload
 sudo service globus_cw_daemon restart
 sudo service globus_cw_daemon status

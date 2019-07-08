@@ -2,10 +2,10 @@ from setuptools import setup, find_packages
 
 setup(
     name="globus_cw_daemon",
-    version=1.0,
+    version=2.0,
     packages=find_packages(),
     install_requires=[
-        'boto==2.48.0'
+        'boto3<2',
     ],
 
     entry_points={
