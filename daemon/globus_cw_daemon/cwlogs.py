@@ -3,18 +3,17 @@ Upload logs to cloudwatch.
 - log records too old are discarded by AWS (tooOldLogEventEndIndex)
 - log records in the future are discarded by AWS (tooNewLogEventStartIndex)
 """
-import time
 import logging
+import time
 
 import boto3
 
-
-MAX_EVENT_BYTES = (256 * 1024)
+MAX_EVENT_BYTES = 256 * 1024
 
 # These make our batches conform to the AWS API
-MAX_BATCH_BYTES = 800000            # Officially 1MB
-MAX_BATCH_RECORDS = 5000            # Officially 10,000
-MAX_BATCH_RANGE_HOURS = 6           # Officially 24 hours
+MAX_BATCH_BYTES = 800000  # Officially 1MB
+MAX_BATCH_RECORDS = 5000  # Officially 10,000
+MAX_BATCH_RANGE_HOURS = 6  # Officially 24 hours
 
 _log = logging.getLogger(__name__)
 
@@ -80,7 +79,7 @@ class _Batch(object):
     def time_diff_exceeded(a, b):
         diff_ms = b.timestamp - a.timestamp
         assert diff_ms >= 0
-        return (diff_ms >= (3600 * MAX_BATCH_RANGE_HOURS * 1000))
+        return diff_ms >= (3600 * MAX_BATCH_RANGE_HOURS * 1000)
 
 
 class LogWriter(object):
@@ -93,17 +92,16 @@ class LogWriter(object):
 
         # Keep a connection around for performance.  boto is smart enough
         # to refresh role creds right before they expire (see provider.py).
-        self.client = boto3.client('logs', region_name=(aws_region or "us-east-1"))
+        self.client = boto3.client("logs", region_name=(aws_region or "us-east-1"))
 
         self.group_name = group_name
         self.stream_name = stream_name
         # will be passed on the first call and caught as InvalidSequenceTokenError
-        self.sequence_token = 'invalid'
+        self.sequence_token = "invalid"
 
         try:
             self.client.create_log_stream(
-                logGroupName=self.group_name,
-                logStreamName=self.stream_name
+                logGroupName=self.group_name, logStreamName=self.stream_name
             )
         except self.client.exceptions.ResourceAlreadyExistsException:
             pass
@@ -119,8 +117,9 @@ class LogWriter(object):
                     break
                 events.pop()
 
-            _log.debug("flushing batch, bytes=%d, recs=%d",
-                       batch.nr_bytes, len(batch.records))
+            _log.debug(
+                "flushing batch, bytes=%d, recs=%d", batch.nr_bytes, len(batch.records)
+            )
             self._flush_events(batch.get_records_for_boto())
 
     def _flush_events(self, events):
@@ -135,16 +134,21 @@ class LogWriter(object):
                     logGroupName=self.group_name,
                     logStreamName=self.stream_name,
                     logEvents=events,
-                    sequenceToken=self.sequence_token
+                    sequenceToken=self.sequence_token,
                 )
                 _log.debug("flush ok")
                 self.sequence_token = ret["nextSequenceToken"]
                 return
-            except (self.client.exceptions.DataAlreadyAcceptedException,
-                    self.client.exceptions.InvalidSequenceTokenException) as e:
+            except (
+                self.client.exceptions.DataAlreadyAcceptedException,
+                self.client.exceptions.InvalidSequenceTokenException,
+            ) as e:
                 self.sequence_token = e.response["Error"]["Message"].split()[-1]
-                _log.info("{}, sequence_token={}".format(
-                    e.response["Error"]["Code"], self.sequence_token))
+                _log.info(
+                    "{}, sequence_token={}".format(
+                        e.response["Error"]["Code"], self.sequence_token
+                    )
+                )
                 return
             except Exception as e:
                 _log.error("error: %r", e)
@@ -156,11 +160,12 @@ def test():
 
     def now_ms():
         import time
+
         time.sleep(0.1)
         return int(time.time() * 1000)
 
     def hours(n):
-        return 3600*n*1000
+        return 3600 * n * 1000
 
     writer = LogWriter("cwlogger-test", "test-stream")
 

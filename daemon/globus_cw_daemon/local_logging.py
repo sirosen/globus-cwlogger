@@ -61,7 +61,7 @@ def configure():
     Set up a stderr StreamHandler, PrintKFormatter, and log level pulled from
     config
     """
-    logger = logging.getLogger('globus_cw_daemon')
+    logger = logging.getLogger("globus_cw_daemon")
 
     handler = logging.StreamHandler()
     formatter = PrintKFormatter()

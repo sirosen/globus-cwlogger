@@ -1,9 +1,9 @@
 """
 Python client API for cwlogs daemon
 """
-import time
-import socket
 import json
+import socket
+import time
 
 try:
     # Python 2
@@ -29,11 +29,11 @@ def log_event(message, retries=10, wait=0.1):
         message = message.decode("utf-8")
     assert isinstance(message, UNICODE_TYPE)
 
-    assert(type(retries) == int)
-    assert(retries >= 0)
+    assert type(retries) == int
+    assert retries >= 0
 
-    assert(type(wait) == int or type(wait) == float)
-    assert(wait >= 0)
+    assert type(wait) == int or type(wait) == float
+    assert wait >= 0
 
     req = dict()
     req["message"] = message
@@ -48,7 +48,7 @@ def _connect(retries, wait):
     Raise: Exception if max attempts exceeded
     """
     addr = "\0org.globus.cwlogs"
-    for i in range(retries+1):
+    for i in range(retries + 1):
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM, 0)
         try:
             sock.connect(addr)
@@ -90,14 +90,19 @@ def _request(req, retries, wait):
         raise CWLoggerDaemonError("unknown response type", d)
 
 
-# Ignore (swallow) these exceptions at your own risk.
-# CWLoggerDaemonError can be caused by many things, including but not limited to:
-# bad IAM policy, a killed / failed daemon background thread, AWS throttling,
-# invalid length/encoding.
-# Ignore only if you have some other mechanism (e.g. a lambda / cloudwatch / heartbeat monitor)
-# to ensure logs are properly configured and working, and/or write logs to disk manually.
-# Note that even in the absence of exceptions, messages may still be lost - the daemon has a
-# very large memory queue and works asynchronously.
+"""
+Ignore (swallow) these exceptions at your own risk.
+CWLoggerDaemonError can be caused by many things, including but not limited to:
+bad IAM policy, a killed / failed daemon background thread, AWS throttling,
+invalid length/encoding.
+
+Ignore only if you have some other mechanism
+(e.g. a lambda / cloudwatch / heartbeat monitor) to ensure logs are properly configured
+and working, and/or write logs to disk manually.
+
+Note that even in the absence of exceptions, messages may still be lost - the daemon
+has a very large memory queue and works asynchronously.
+"""
 
 
 class CWLoggerError(Exception):

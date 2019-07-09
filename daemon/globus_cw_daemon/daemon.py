@@ -2,19 +2,18 @@
 """
 Upload messages to cloud watch logs
 """
-import os
-import sys
-import socket
-import logging
-import time
 import errno
-import threading
 import json
+import logging
+import os
+import socket
+import sys
+import threading
+import time
 
-import globus_cw_daemon.cwlogs as cwlogs
 import globus_cw_daemon.config as config
+import globus_cw_daemon.cwlogs as cwlogs
 import globus_cw_daemon.local_logging as local_logging
-
 
 # Note that the total memory limit is double this:
 # * the flush thread can be flushing MAX_EVENT_QUEUE_LEN
@@ -32,7 +31,7 @@ _log = logging.getLogger(__name__)
 
 # Data shared with flush thread
 _g_lock = threading.Lock()
-_g_queue = []   # List of Events
+_g_queue = []  # List of Events
 _g_nr_dropped = 0
 
 # get constant instance_id on start
@@ -96,8 +95,12 @@ def _flush_thread_main(writer):
 
 
 def _get_drop_event(nr_dropped):
-    data = dict(type="audit", subtype="cwlogs.dropped",
-                dropped=nr_dropped, instance_id=INSTANCE_ID)
+    data = dict(
+        type="audit",
+        subtype="cwlogs.dropped",
+        dropped=nr_dropped,
+        instance_id=INSTANCE_ID,
+    )
     ret = cwlogs.Event(timestamp=None, message=json.dumps(data))
     return ret
 
@@ -117,9 +120,12 @@ def _health_info(q_len=None):
 
 
 def _get_heartbeat_event(nr_found):
-    data = dict(type="audit", subtype="cwlogs.heartbeat",
-                instance_id=INSTANCE_ID,
-                health=_health_info(nr_found))
+    data = dict(
+        type="audit",
+        subtype="cwlogs.heartbeat",
+        instance_id=INSTANCE_ID,
+        health=_health_info(nr_found),
+    )
     ret = cwlogs.Event(timestamp=None, message=json.dumps(data))
     return ret
 
@@ -220,7 +226,8 @@ def main():
         if not INSTANCE_ID:
             raise Exception(
                 "no stream_name found in /etc/cwlogd.ini, and "
-                "no ec2 instance_id found in /var/lib/cloud/instance")
+                "no ec2 instance_id found in /var/lib/cloud/instance"
+            )
         else:
             stream_name = INSTANCE_ID
 
@@ -232,8 +239,10 @@ def main():
     try:
         group_name = config.get_string("group_name")
     except KeyError:
-        raise Exception("no group_name found in /etc/cwlogd.ini, have you "
-                        "run globus_cw_daemon_install?")
+        raise Exception(
+            "no group_name found in /etc/cwlogd.ini, have you "
+            "run globus_cw_daemon_install?"
+        )
 
     writer = cwlogs.LogWriter(group_name, stream_name, aws_region=aws_region)
 
