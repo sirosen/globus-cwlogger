@@ -96,8 +96,10 @@ class LogWriter(object):
 
         self.group_name = group_name
         self.stream_name = stream_name
-        # will be passed on the first call and caught as InvalidSequenceTokenError
-        self.sequence_token = "invalid"
+        # on the first call to a new log stream, this *must* be omitted
+        # on an existing stream, leaving it out will trigger an
+        # InvalidSequenceToken error, which we handle
+        self.sequence_token = None
 
         try:
             self.client.create_log_stream(
@@ -130,26 +132,27 @@ class LogWriter(object):
         assert len(events)
         while True:
             try:
-                ret = self.client.put_log_events(
+                kwargs = dict(
                     logGroupName=self.group_name,
                     logStreamName=self.stream_name,
                     logEvents=events,
-                    sequenceToken=self.sequence_token,
                 )
+                if self.sequence_token:
+                    kwargs["sequenceToken"] = self.sequence_token
+                ret = self.client.put_log_events(**kwargs)
                 _log.debug("flush ok")
                 self.sequence_token = ret["nextSequenceToken"]
                 return
-            except (
-                self.client.exceptions.DataAlreadyAcceptedException,
-                self.client.exceptions.InvalidSequenceTokenException,
-            ) as e:
+            except self.client.exceptions.DataAlreadyAcceptedException:
+                _log.warning("DataAlreadyAcceptedException", exc_info=True)
+                return
+            except self.client.exceptions.InvalidSequenceTokenException as e:
                 self.sequence_token = e.response["Error"]["Message"].split()[-1]
                 _log.info(
                     "{}, sequence_token={}".format(
                         e.response["Error"]["Code"], self.sequence_token
                     )
                 )
-                return
             except Exception as e:
                 _log.error("error: %r", e)
                 time.sleep(3)
