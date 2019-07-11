@@ -10,14 +10,14 @@ if [ $# -eq 1 ]
 then
   branch=$1
   client_installpath="git+https://github.com/globus/globus-cwlogger@${branch}#subdirectory=client"
-  client_installpath="git+https://github.com/globus/globus-cwlogger@${branch}#subdirectory=daemon"
+  daemon_installpath="git+https://github.com/globus/globus-cwlogger@${branch}#subdirectory=daemon"
 else
   # default to local install
   client_installpath="../client/"
   daemon_installpath="../daemon/"
 fi
 
-set -e
+set -ex
 
 # cleanup any existing daemon or venv and (re)install as root
 ./_install_daemon.sh "$daemon_installpath"

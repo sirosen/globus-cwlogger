@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 installpath="$1"
 
@@ -8,6 +8,7 @@ sudo rm -f /etc/cwlogd.ini
 sudo -H pip uninstall globus_cw_daemon -y
 sudo -H pip3 uninstall globus_cw_daemon -y
 rm -rf venv
+
 set -e
 
 # setup the daemon as root
