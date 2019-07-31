@@ -1,5 +1,15 @@
 = GLOBUS CW-LOGGER Changelog
 
+== 1.0
+
+* convert the daemon to python3-only -- the client is still py2/py3
+* convert the daemon from boto to boto3
+* apply black, isort, and flake8 as linting/code-quality checks and formatting
+  standards
+* tune several local INFO level log messages down to DEBUG to produce less
+  noise in syslog
+* local logging encodes priority levels for journald/syslog, can be handled via
+  journald config as seen in daemon/globus_cw_daemon_install/example-journald.conf
 
 == beta-4
 

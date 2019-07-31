@@ -4,10 +4,10 @@ Tool for globus services to log to aws cloudwatch
 
 Maintainers: aaschaer, sirosen
 
-==== Install, enable, and restart Daemon (Python 2)
+==== Install, enable, and restart Daemon (Python 3)
 
 ----
-sudo pip install git+https://github.com/globus/globus-cwlogger#subdirectory=daemon
+sudo pip3 install git+https://github.com/globus/globus-cwlogger#subdirectory=daemon
 sudo globus_cw_daemon_install <group_name> --stream-name <optional_stream_name>
 sudo systemctl -q enable globus_cw_daemon.service
 sudo systemctl start globus_cw_daemon
