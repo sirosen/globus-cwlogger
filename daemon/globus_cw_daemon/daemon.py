@@ -1,12 +1,19 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 """
 Upload messages to cloud watch logs
 """
-import os, sys, socket, logging, time, errno, threading, json
+import errno
+import json
+import logging
+import os
+import socket
+import sys
+import threading
+import time
 
-import globus_cw_daemon.cwlogs as cwlogs
 import globus_cw_daemon.config as config
-
+import globus_cw_daemon.cwlogs as cwlogs
+import globus_cw_daemon.local_logging as local_logging
 
 # Note that the total memory limit is double this:
 # * the flush thread can be flushing MAX_EVENT_QUEUE_LEN
@@ -24,7 +31,7 @@ _log = logging.getLogger(__name__)
 
 # Data shared with flush thread
 _g_lock = threading.Lock()
-_g_queue = []   # List of Events
+_g_queue = []  # List of Events
 _g_nr_dropped = 0
 
 # get constant instance_id on start
@@ -60,7 +67,7 @@ def _flush_thread_main(writer):
         time.sleep(FLUSH_WAIT_SECS)
         if heartbeats:
             time_since_hb += FLUSH_WAIT_SECS
-        _log.info("checking queue")
+        _log.debug("checking queue")
 
         with _g_lock:
             new_data = _g_queue
@@ -69,11 +76,12 @@ def _flush_thread_main(writer):
             _g_queue = []
             _g_nr_dropped = 0
 
-        _log.info("found %d events", nr_found)
+        _log.debug("found %d events", nr_found)
 
         # if heartbeats are on and heartbeat_interval seconds have passed
         # then send a heartbeat to cw logs
         if heartbeats and time_since_hb >= hb_interval:
+            _log.info("sending heartbeat event")
             hb_event = _get_heartbeat_event(nr_found)
             new_data.append(hb_event)
             time_since_hb = 0
@@ -87,8 +95,12 @@ def _flush_thread_main(writer):
 
 
 def _get_drop_event(nr_dropped):
-    data = dict(type="audit", subtype="cwlogs.dropped",
-                dropped=nr_dropped, instance_id=INSTANCE_ID)
+    data = dict(
+        type="audit",
+        subtype="cwlogs.dropped",
+        dropped=nr_dropped,
+        instance_id=INSTANCE_ID,
+    )
     ret = cwlogs.Event(timestamp=None, message=json.dumps(data))
     return ret
 
@@ -108,9 +120,12 @@ def _health_info(q_len=None):
 
 
 def _get_heartbeat_event(nr_found):
-    data = dict(type="audit", subtype="cwlogs.heartbeat",
-                instance_id=INSTANCE_ID,
-                health=_health_info(nr_found))
+    data = dict(
+        type="audit",
+        subtype="cwlogs.heartbeat",
+        instance_id=INSTANCE_ID,
+        health=_health_info(nr_found),
+    )
     ret = cwlogs.Event(timestamp=None, message=json.dumps(data))
     return ret
 
@@ -121,16 +136,16 @@ def do_request(sock):
     Post: response is sent but @sock is left open
     """
     # Read <json_data>\n
-    buf = ""
+    buf = b""
     while True:
         chunk = sock.recv(4000)
         if not chunk:
             raise Exception("no data")
         buf += chunk
-        if buf.endswith("\n"):
+        if buf.endswith(b"\n"):
             break
 
-    d = json.loads(buf[:-1])
+    d = json.loads(buf[:-1].decode("utf-8"))
     _log.debug("request: %r", d)
 
     try:
@@ -141,7 +156,7 @@ def do_request(sock):
         response = dict(status="error", message=repr(e))
 
     _log.debug("response: %r", response)
-    buf = json.dumps(response, indent=None) + "\n"
+    buf = json.dumps(response, indent=None).encode("utf-8") + b"\n"
     sock.sendall(buf)
 
 
@@ -185,13 +200,8 @@ def run_request_loop(listen_sock):
 
 
 def main():
-
     # send local logs to stderr
-    local_log_level = config.get_string("local_log_level").upper()
-    logging.basicConfig(
-        level=local_log_level, stream=sys.stderr, datefmt='%Y-%m-%d %H:%M:%S',
-        fmt=("%(asctime)s.%(msecs)03d %(levelname)s %(process)d:%(thread)d "
-             "%(name)s: %(message)s"))
+    local_logging.configure()
 
     _print("cwlogs: starting...")
     _log.info("starting")
@@ -216,17 +226,25 @@ def main():
         if not INSTANCE_ID:
             raise Exception(
                 "no stream_name found in /etc/cwlogd.ini, and "
-                "no ec2 instance_id found in /var/lib/cloud/instance")
+                "no ec2 instance_id found in /var/lib/cloud/instance"
+            )
         else:
             stream_name = INSTANCE_ID
 
     try:
+        aws_region = config.get_string("aws_region")
+    except KeyError:
+        aws_region = None
+
+    try:
         group_name = config.get_string("group_name")
     except KeyError:
-        raise Exception("no group_name found in /etc/cwlogd.ini, have you "
-                        "run globus_cw_daemon_install?")
+        raise Exception(
+            "no group_name found in /etc/cwlogd.ini, have you "
+            "run globus_cw_daemon_install?"
+        )
 
-    writer = cwlogs.LogWriter(group_name, stream_name)
+    writer = cwlogs.LogWriter(group_name, stream_name, aws_region=aws_region)
 
     flush_thread = threading.Thread(target=flush_thread_main, args=(writer,))
     flush_thread.daemon = True

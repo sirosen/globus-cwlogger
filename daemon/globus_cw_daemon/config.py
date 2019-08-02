@@ -1,7 +1,7 @@
 """
 Provides access to /etc/cwlogd.ini config values
 """
-import ConfigParser as configparser
+import configparser
 
 CONFIG_PATH = "/etc/cwlogd.ini"
 _config = None

@@ -6,10 +6,10 @@ AWS CloudWatch Logs as an alternative to the AWS CloudWatch Agent.
 Although globus-cwlogger is an open source project, it is not intended for
 general use. We don't recommend that third parties depend upon it.
 
-==== Install, enable, and restart Daemon (Python 2)
+==== Install, enable, and restart Daemon (Python 3)
 
 ----
-sudo pip install git+https://github.com/globus/globus-cwlogger#subdirectory=daemon
+sudo pip3 install git+https://github.com/globus/globus-cwlogger#subdirectory=daemon
 sudo globus_cw_daemon_install <group_name> --stream-name <optional_stream_name>
 sudo systemctl -q enable globus_cw_daemon.service
 sudo systemctl start globus_cw_daemon
