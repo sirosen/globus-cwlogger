@@ -9,7 +9,7 @@ general use. We don't recommend that third parties depend upon it.
 ==== Install, enable, and restart Daemon (Python 3)
 
 ----
-sudo pip3 install git+https://github.com/globus/globus-cwlogger#subdirectory=daemon
+sudo pip3 install git+https://github.com/globus/globus-cwlogger@1.0#subdirectory=daemon
 sudo globus_cw_daemon_install <group_name> --stream-name <optional_stream_name>
 sudo systemctl -q enable globus_cw_daemon.service
 sudo systemctl start globus_cw_daemon
@@ -18,7 +18,7 @@ sudo systemctl start globus_cw_daemon
 ==== Install and use Client Module (Python 2 or 3)
 
 ----
-pip install git+https://github.com/globus/globus-cwlogger#subdirectory=client
+pip install git+https://github.com/globus/globus-cwlogger1.0#subdirectory=client
 ----
 
 ----
