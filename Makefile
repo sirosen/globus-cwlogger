@@ -4,28 +4,17 @@ help:
 	@echo ""
 	@echo "  help:      Show this helptext"
 	@echo ""
-	@echo "  autoformat:"
-	@echo "             run autoformatting tools"
-	@echo ""
-	@echo "  lint:      run autoformatting tools as linters + flake8"
+	@echo "  lint:      run linters and fixers"
 	@echo ""
 	@echo "  clean:     remove tooling virtualenv"
 
 .venv:
 	python3 -m venv .venv
-	.venv/bin/pip install black isort flake8
-	touch .venv
-
-.PHONY: autoformat
-autoformat: .venv
-	 .venv/bin/isort --recursive .
-	 .venv/bin/black .
+	.venv/bin/pip install pre-commit==1.18.3
 
 .PHONY: lint
 lint: .venv
-	.venv/bin/isort --check-only --recursive .
-	.venv/bin/black --check .
-	.venv/bin/flake8
+	.venv/bin/pre-commit run --all-files --show-diff-on-failure
 
 .PHONY: clean
 clean:

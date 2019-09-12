@@ -7,10 +7,10 @@ import time
 
 try:
     # Python 2
-    UNICODE_TYPE = unicode
+    UNICODE_TYPE = unicode  # type: ignore
 except NameError:
     # Python 3
-    UNICODE_TYPE = str
+    UNICODE_TYPE = str  # type: ignore
 
 
 def log_event(message, retries=10, wait=0.1):
@@ -48,7 +48,7 @@ def _connect(retries, wait):
     Raise: Exception if max attempts exceeded
     """
     addr = "\0org.globus.cwlogs"
-    for i in range(retries + 1):
+    for _ in range(retries + 1):
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM, 0)
         try:
             sock.connect(addr)
