@@ -22,6 +22,11 @@ class InvalidMessage(Exception):
     pass
 
 
+def _checktype(value, types, message):
+    if not isinstance(value, types):
+        raise TypeError(message)
+
+
 class Event(object):
     def __init__(self, timestamp, message, enforce_limit=True):
         """
@@ -32,9 +37,10 @@ class Event(object):
             message = message.decode("utf-8")
         if timestamp is None:
             timestamp = int(time.time() * 1000)
-        assert isinstance(timestamp, int)
-        assert isinstance(message, str)
-        assert timestamp >= 0
+        _checktype(message, str, "message must be an str")
+        _checktype(timestamp, int, "timestamp must be an int")
+        if timestamp < 0:
+            raise ValueError("Event.timestamp must be non-negative")
         encoded_message = message.encode("utf-8")
         self.timestamp = timestamp
         self.unicode_message = message
@@ -53,7 +59,7 @@ class _Batch(object):
         Return True if record was added to this batch, otherwise False
         Prereq: records are in timestamp order
         """
-        assert isinstance(record, Event)
+        _checktype(record, Event, "batch records must be Events")
 
         if len(self.records) >= MAX_BATCH_RECORDS:
             return False
@@ -78,7 +84,10 @@ class _Batch(object):
     @staticmethod
     def time_diff_exceeded(a, b):
         diff_ms = b.timestamp - a.timestamp
-        assert diff_ms >= 0
+        if diff_ms < 0:
+            raise ValueError(
+                "checking timestamp diff in record batch got negative diff"
+            )
         return diff_ms >= (3600 * MAX_BATCH_RANGE_HOURS * 1000)
 
 
@@ -129,7 +138,8 @@ class LogWriter(object):
         Upload a single batch of events.
         All exceptions are retried forever.
         """
-        assert len(events)
+        if not len(events):
+            raise ValueError("cannot flush with no events")
         while True:
             try:
                 kwargs = dict(

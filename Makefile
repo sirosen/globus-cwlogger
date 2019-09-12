@@ -14,7 +14,7 @@ help:
 
 .PHONY: lint
 lint: .venv
-	.venv/bin/pre-commit run --all-files --show-diff-on-failure
+	.venv/bin/pre-commit run --all-files
 
 .PHONY: clean
 clean:

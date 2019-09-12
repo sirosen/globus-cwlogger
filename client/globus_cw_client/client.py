@@ -13,6 +13,11 @@ except NameError:
     UNICODE_TYPE = str  # type: ignore
 
 
+def _checktype(value, types, message):
+    if not isinstance(value, types):
+        raise TypeError(message)
+
+
 def log_event(message, retries=10, wait=0.1):
     """
     Log the @message string to cloudwatch logs, using the current time.
@@ -27,13 +32,15 @@ def log_event(message, retries=10, wait=0.1):
     # python3 json library can't handle bytes, so preemptively decode utf-8
     if isinstance(message, bytes):
         message = message.decode("utf-8")
-    assert isinstance(message, UNICODE_TYPE)
+    _checktype(message, UNICODE_TYPE, "message type must be bytes or unicode")
 
-    assert type(retries) == int
-    assert retries >= 0
+    _checktype(retries, int, "retries must be an int")
+    if retries < 0:
+        raise ValueError("retries must be non-negative")
 
-    assert type(wait) == int or type(wait) == float
-    assert wait >= 0
+    _checktype(wait, (int, float), "wait must be an int or float")
+    if wait < 0:
+        raise ValueError("wait must be non-negative")
 
     req = dict()
     req["message"] = message
