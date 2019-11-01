@@ -1,6 +1,6 @@
 Run `bash test.sh` on a machine that has pip, python2, and python3,
 and is configured with aws permissions to an existing cloudwatch group named
-"cwlogger-test" 
+"cwlogger-test"
 
 Tests the following:
 - download from github via pip
