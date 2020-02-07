@@ -18,7 +18,7 @@ sudo systemctl start globus_cw_daemon
 ==== Install and use Client Module (Python 2 or 3)
 
 ----
-pip install git+https://github.com/globus/globus-cwlogger1.0#subdirectory=client&egg=globus_cw_client
+pip install git+https://github.com/globus/globus-cwlogger@1.0#subdirectory=client&egg=globus_cw_client
 ----
 
 ----
@@ -30,4 +30,22 @@ log_event("some message string")
 # default is retries=10, wait=0.1
 log_event("message which fails fast", retries=0, wait=0)
 log_event("message which waits up to 60 seconds", retries=60, wait=1)
+----
+
+=== Installation Without `subdirectory`
+
+If you are using a non-pip tool to handle python packages, it may not support
+`subdirectory`. In these cases, it's best to use the published sdist tarballs
+for each release.
+
+Daemon:
+
+----
+sudo pip3 install https://github.com/globus/globus-cwlogger/releases/download/1.0/daemon.tar.gz
+----
+
+Client:
+
+----
+pip install https://github.com/globus/globus-cwlogger/releases/download/1.0/client.tar.gz
 ----
