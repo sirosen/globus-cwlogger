@@ -27,6 +27,10 @@ def _checktype(value, types, message):
         raise TypeError(message)
 
 
+def _add_emf_header(request, **kwargs):
+    request.headers.add_header("x-amzn-logs-format", "json/emf")
+
+
 class Event(object):
     def __init__(self, timestamp, message, enforce_limit=True):
         """
@@ -102,6 +106,9 @@ class LogWriter(object):
         # Keep a connection around for performance.  boto is smart enough
         # to refresh role creds right before they expire (see provider.py).
         self.client = boto3.client("logs", region_name=(aws_region or "us-east-1"))
+        self.client.meta.events.register(
+            "before-sign.cloudwatch-logs.PutLogEvents", _add_emf_header
+        )
 
         self.group_name = group_name
         self.stream_name = stream_name

@@ -49,3 +49,24 @@ Client:
 ----
 pip install https://github.com/globus/globus-cwlogger/releases/download/1.0/client.tar.gz
 ----
+
+=== Using EMF Logs
+
+globus-cwlogger supports use of the CloudWatch Embedded Metric Format.
+For full details, see
+link:https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html[the EMF specification].
+
+Logging with EMF does not require any special options or considerations. For
+example, this log will create a metric `foo` with a dimension
+`bar='test-metric'`:
+
+----
+import json
+import time
+
+from globus_cw_client.client import log_event
+
+
+payload = {"foo": 1, "bar": "test-metric", "_aws": {"Timestamp": int(time.time()*1000), "CloudWatchMetrics": [{"Namespace": "globus-cwlogger-test", "Dimensions": [["bar"]], "Metrics": [{"Name": "foo", "Unit": "Count"}]}]}}
+log_event(json.dumps(payload))
+----
