@@ -1,5 +1,9 @@
 = GLOBUS CW-LOGGER Changelog
 
+== Unreleased
+
+* add support for EMF-format logs
+
 == 1.0
 
 * convert the daemon to python3-only -- the client is still py2/py3
