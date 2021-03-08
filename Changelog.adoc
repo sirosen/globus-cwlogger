@@ -2,6 +2,8 @@
 
 == Unreleased
 
+== 1.1b1
+
 * add support for EMF-format logs
 
 == 1.0

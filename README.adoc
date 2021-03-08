@@ -67,6 +67,19 @@ import time
 from globus_cw_client.client import log_event
 
 
-payload = {"foo": 1, "bar": "test-metric", "_aws": {"Timestamp": int(time.time()*1000), "CloudWatchMetrics": [{"Namespace": "globus-cwlogger-test", "Dimensions": [["bar"]], "Metrics": [{"Name": "foo", "Unit": "Count"}]}]}}
+payload = {
+    "foo": 1,
+    "bar": "test-metric",
+    "_aws": {
+        "Timestamp": int(time.time()*1000),
+        "CloudWatchMetrics": [
+            {
+                "Namespace": "globus-cwlogger-test",
+                "Dimensions": [["bar"]],
+                "Metrics": [{"Name": "foo", "Unit": "Count"}]
+            }
+        ]
+    }
+}
 log_event(json.dumps(payload))
 ----
