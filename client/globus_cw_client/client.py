@@ -77,13 +77,13 @@ def _request(req, retries, wait):
     sock = _connect(retries, wait)
     sock.sendall(buf)
 
-    resp = u""
+    resp = ""
     while True:
         chunk = sock.recv(4000)
         if not chunk:
             raise Exception("no data")
         resp += chunk.decode("utf-8")
-        if resp.endswith(u"\n"):
+        if resp.endswith("\n"):
             break
 
     d = json.loads(resp[:-1])

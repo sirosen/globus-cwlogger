@@ -31,7 +31,7 @@ def _add_emf_header(request, **kwargs):
     request.headers.add_header("x-amzn-logs-format", "json/emf")
 
 
-class Event(object):
+class Event:
     def __init__(self, timestamp, message, enforce_limit=True):
         """
         Raise: InvalidMessage if message is too long
@@ -53,7 +53,7 @@ class Event(object):
             raise InvalidMessage("message too large")
 
 
-class _Batch(object):
+class _Batch:
     def __init__(self):
         self.nr_bytes = 0
         self.records = []
@@ -95,7 +95,7 @@ class _Batch(object):
         return diff_ms >= (3600 * MAX_BATCH_RANGE_HOURS * 1000)
 
 
-class LogWriter(object):
+class LogWriter:
     def __init__(self, group_name, stream_name, aws_region=None):
         """
         Create the @stream_name if it doesn't exist.
@@ -197,8 +197,8 @@ def test():
 
     events = []
     # These just fit
-    events.append(Event(now_ms(), u"\n" * 262118))
-    events.append(Event(now_ms(), u"\u00a9" * 131059))
+    events.append(Event(now_ms(), "\n" * 262118))
+    events.append(Event(now_ms(), "\u00a9" * 131059))
 
     # Invalid utf8
     # events.append(Event(now_ms(), "\xff\xff"))

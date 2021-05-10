@@ -30,7 +30,7 @@ class PrintKFormatter(logging.Formatter):
             "%(name)s: %(message)s"
         )
         kwargs["datefmt"] = "%Y-%m-%d %H:%M:%S"
-        super(PrintKFormatter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def encode_level(self, record):
         # logging.handlers.SyslogHandler has an interesting note about
@@ -50,8 +50,8 @@ class PrintKFormatter(logging.Formatter):
         ]
 
     def format(self, record):
-        level = "<{}>".format(self.encode_level(record))
-        return level + super(PrintKFormatter, self).format(record)
+        level = f"<{self.encode_level(record)}>"
+        return level + super().format(record)
 
 
 def configure():
