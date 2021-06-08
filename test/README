@@ -6,4 +6,5 @@ Tests the following:
 - download from github via pip
 - install and systemd config of deamon
 - install of client
-- python2/python3 compatibility of client
+- message failure and retry handling
+- ascii and non-ascii messages

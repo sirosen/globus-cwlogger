@@ -5,13 +5,6 @@ import json
 import socket
 import time
 
-try:
-    # Python 2
-    UNICODE_TYPE = unicode  # type: ignore
-except NameError:
-    # Python 3
-    UNICODE_TYPE = str  # type: ignore
-
 
 def _checktype(value, types, message):
     if not isinstance(value, types):
@@ -32,7 +25,7 @@ def log_event(message, retries=10, wait=0.1):
     # python3 json library can't handle bytes, so preemptively decode utf-8
     if isinstance(message, bytes):
         message = message.decode("utf-8")
-    _checktype(message, UNICODE_TYPE, "message type must be bytes or unicode")
+    _checktype(message, str, "message type must be bytes or unicode")
 
     _checktype(retries, int, "retries must be an int")
     if retries < 0:
@@ -71,19 +64,19 @@ def _connect(retries, wait):
 def _request(req, retries, wait):
     buf = json.dumps(req, indent=None) + "\n"
     # dumps returns unicode with python3, but sock requires bytes
-    if isinstance(buf, UNICODE_TYPE):
+    if isinstance(buf, str):
         buf = buf.encode("utf-8")
 
     sock = _connect(retries, wait)
     sock.sendall(buf)
 
-    resp = u""
+    resp = ""
     while True:
         chunk = sock.recv(4000)
         if not chunk:
             raise Exception("no data")
         resp += chunk.decode("utf-8")
-        if resp.endswith(u"\n"):
+        if resp.endswith("\n"):
             break
 
     d = json.loads(resp[:-1])

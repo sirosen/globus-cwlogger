@@ -189,7 +189,7 @@ def run_request_loop(listen_sock):
         try:
             try:
                 sock, addr = listen_sock.accept()
-            except socket.error:
+            except OSError:
                 continue
             try:
                 _log.debug("accepted connection")
@@ -213,7 +213,7 @@ def main():
     addr = "\0org.globus.cwlogs"
     try:
         listen_sock.bind(addr)
-    except socket.error as e:
+    except OSError as e:
         if e.errno == errno.EADDRINUSE:
             _print("cwlogs: already running")
             return

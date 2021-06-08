@@ -28,7 +28,7 @@ def get_string(key):
     try:
         return _get_config().get("general", key)
     except configparser.NoOptionError:
-        raise KeyError("key %s not found in %s" % (key, CONFIG_PATH))
+        raise KeyError(f"key {key} not found in {CONFIG_PATH}")
 
 
 def get_bool(key):
@@ -40,7 +40,7 @@ def get_bool(key):
     try:
         return _get_config().getboolean("general", key)
     except configparser.NoOptionError:
-        raise KeyError("key %s not found in %s" % (key, CONFIG_PATH))
+        raise KeyError(f"key {key} not found in {CONFIG_PATH}")
 
 
 def get_int(key):
@@ -52,4 +52,4 @@ def get_int(key):
     try:
         return _get_config().getint("general", key)
     except configparser.NoOptionError:
-        raise KeyError("key %s not found in %s" % (key, CONFIG_PATH))
+        raise KeyError(f"key {key} not found in {CONFIG_PATH}")
