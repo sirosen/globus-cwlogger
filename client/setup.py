@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="globus_cw_client",
-    version="1.1b1",
+    version="1.1",
     packages=find_packages(),
     # descriptive info, non-critical
     description="Client for Globus CloudWatch Logger",
