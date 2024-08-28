@@ -1,6 +1,7 @@
 """
 Python client API for cwlogs daemon
 """
+
 import json
 import socket
 import time
