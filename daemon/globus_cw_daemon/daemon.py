@@ -2,6 +2,8 @@
 """
 Upload messages to cloud watch logs
 """
+from __future__ import annotations
+
 import errno
 import json
 import logging
@@ -10,7 +12,6 @@ import socket
 import sys
 import threading
 import time
-import typing as t
 
 import globus_cw_daemon.config as config
 import globus_cw_daemon.cwlogs as cwlogs
@@ -32,14 +33,12 @@ _log = logging.getLogger(__name__)
 
 # Data shared with flush thread
 _g_lock = threading.Lock()
-_g_queue: t.List[cwlogs.Event] = []  # List of Events
+_g_queue: list[cwlogs.Event] = []  # List of Events
 _g_nr_dropped = 0
 
 # get constant instance_id on start
 try:
-    INSTANCE_ID: t.Union[str, None] = os.readlink("/var/lib/cloud/instance").split("/")[
-        -1
-    ]
+    INSTANCE_ID: str | None = os.readlink("/var/lib/cloud/instance").split("/")[-1]
 except OSError:
     INSTANCE_ID = None
 
