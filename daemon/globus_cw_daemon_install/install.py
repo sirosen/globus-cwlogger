@@ -18,17 +18,16 @@ def main():
     # get group name argument
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "group_name", help="Name of the existing CloudWatch log group " "to log to."
+        "group_name", help="Name of the existing CloudWatch log group to log to."
     )
     parser.add_argument(
         "--stream-name",
-        help="Specify a stream name. Default is the current " "ec2 instance id.",
+        help="Specify a stream name. Default is the current ec2 instance id.",
     )
     parser.add_argument(
         "--heartbeat-interval",
         type=int,
-        help="Specify the time in seconds between heartbeats. "
-        "Default is 60 seconds.",
+        help="Specify the time in seconds between heartbeats. Default is 60 seconds.",
     )
     parser.add_argument(
         "--no-heartbeats", action="store_true", help="Turn off heartbeats."
