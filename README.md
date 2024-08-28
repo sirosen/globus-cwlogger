@@ -6,7 +6,7 @@ AWS CloudWatch Logs as an alternative to the AWS CloudWatch Agent.
 Although globus-cwlogger is an open source project, it is not intended for
 general use. We don't recommend that third parties depend upon it.
 
-Requires Python 3.6+.
+Requires Python 3.8+.
 
 ## Install, enable, and restart Daemon
 
