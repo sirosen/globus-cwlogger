@@ -3,24 +3,11 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-GHAPI="https://api.github.com"
-GHUPLOADS="https://uploads.github.com"
-REPO_PATH="repos/globus/globus-cwlogger"
-
-echo "= Startup & Self-Check"
-
-command -v jq > /dev/null 2>&1 || { echo "requires jq"; exit 2; }
-
-RELEASE_PATH="latest"
-[ $# -gt 0 ] && RELEASE_PATH="tags/$1"
-[ -f "$HOME/.github-token" ] || { echo "Must have a token in ~/.github-token"; exit 2; }
-
-AUTH_H="Authorization: token $(cat "$HOME"/.github-token)"
-RELEASE_ID="$(curl -s -H "$AUTH_H" "${GHAPI}/$REPO_PATH/releases/$RELEASE_PATH" | jq '.id' -r)"
-echo "RELEASE_ID=$RELEASE_ID"
-
-ASSET_URL="$GHUPLOADS/$REPO_PATH/releases/$RELEASE_ID/assets"
-echo "ASSET_URL=$ASSET_URL"
+if [ $# -ne 1 ]; then
+  echo "USAGE: ./publish-github-assets.sh RELEASE_TAG" >&2
+  exit 2
+fi
+RELEASE_TAG="$1"
 
 # build and upload client and daemon packages
 for name in client daemon; do
@@ -39,9 +26,6 @@ for name in client daemon; do
   mv "$TARBALL" "$name.tar.gz"
 
   echo "= $name = Upload"
-  curl -Ssf -XPOST \
-      -H "Authorization: token $(cat "$HOME"/.github-token)" \
-      -H "Content-Type: application/gzip" \
-      "${ASSET_URL}?name=$name.tar.gz" --data-binary @"$name.tar.gz"
+  gh release upload "$RELEASE_TAG" "$name.tar.gz"
   popd
 done
