@@ -10,7 +10,6 @@ jobs:
   test:
     name: "tox"
     runs-on: "ubuntu-22.04"
-    fail-fast: false
 
     steps:
       - name: "Checkout the repo"
