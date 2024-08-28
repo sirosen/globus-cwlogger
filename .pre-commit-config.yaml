@@ -1,4 +1,8 @@
 repos:
+- repo: https://github.com/sirosen/texthooks
+  rev: 0.6.7
+  hooks:
+    - id: alphabetize-codeowners
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v4.6.0
   hooks:
