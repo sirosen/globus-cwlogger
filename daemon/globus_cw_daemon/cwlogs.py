@@ -3,6 +3,7 @@ Upload logs to cloudwatch.
 - log records too old are discarded by AWS (tooOldLogEventEndIndex)
 - log records in the future are discarded by AWS (tooNewLogEventStartIndex)
 """
+
 import logging
 import time
 

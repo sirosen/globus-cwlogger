@@ -1,6 +1,7 @@
 """
 Provides access to /etc/cwlogd.ini config values
 """
+
 import configparser
 
 CONFIG_PATH = "/etc/cwlogd.ini"

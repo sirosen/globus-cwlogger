@@ -4,6 +4,7 @@ Given a group_name and an optional stream_name as arguments:
 - Creates config file at at /etc/cwlogd.ini
 - Copies globus_cw_daemon.service to /etc/systemd/system/
 """
+
 import argparse
 import configparser
 import os
