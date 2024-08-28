@@ -1,0 +1,62 @@
+name: Publish Release Builds
+on:
+  release:
+    types: [created]
+
+jobs:
+  build-dists:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Setup Python
+        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
+        with:
+          python-version: "3.12"
+
+      - run: python -m pip install build
+
+      - name: build client dists
+        run: |
+          cd client
+          python -m build .
+
+      - name: upload client builds
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+        with:
+          name: client-builds
+          path: client/dist/*
+
+      - name: build daemon dists
+        run: |
+          cd daemon
+          python -m build .
+
+      - name: upload daemon builds
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+        with:
+          name: daemon-builds
+          path: daemon/dist/*
+
+  publish:
+    needs: [build-dists]
+    runs-on: ubuntu-latest
+    steps:
+      - name: download client builds
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: client-builds
+          path: client-dist
+
+      - name: download daemon builds
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: daemon-builds
+          path: daemon-dist
+
+      # upload as release assets
+      - name: Upload Builds
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release upload "${{ github.ref_name }}" client-dist/* daemon-dist/*
