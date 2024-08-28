@@ -2,6 +2,8 @@
 
 == Unreleased
 
+== 1.2
+
 * Close instantiated sockets on connection error to prevent `ResourceWarning`s.
 
 == 1.1
