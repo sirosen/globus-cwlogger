@@ -1,7 +1,10 @@
-.venv/
-venv/
+/.tox/
+/.mypy_cache/
+/client/build/
+/daemon/build/
+
 __pycache__/
-*.pyc
 *.egg-info/
-.mypy_cache/
+
+.coverage
 *.tar.gz
