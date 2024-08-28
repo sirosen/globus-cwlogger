@@ -2,9 +2,12 @@
 Python client API for cwlogs daemon
 """
 
-import json
+from __future__ import annotations
+
 import socket
 import time
+
+import orjson
 
 
 def _checktype(value, types, message):
@@ -12,10 +15,10 @@ def _checktype(value, types, message):
         raise TypeError(message)
 
 
-def log_event(message, retries=10, wait=0.1):
+def log_event(message: str | bytes, retries=10, wait=0.1):
     """
     Log the @message string to cloudwatch logs, using the current time.
-    message: bytes (valid utf8 required) or unicode.
+    message: bytes (valid utf8 required) or str.
     retries: number of retries to make on failed socket connection
     wait: number of seconds to wait between retries
     Raises: exception if the message is too long or invalid utf8
@@ -23,10 +26,10 @@ def log_event(message, retries=10, wait=0.1):
     Returns when the message was queued to the daemon's memory queue.
     (Does not mean the message is safe in cloudwatch)
     """
-    # python3 json library can't handle bytes, so preemptively decode utf-8
+
     if isinstance(message, bytes):
         message = message.decode("utf-8")
-    _checktype(message, str, "message type must be bytes or unicode")
+    _checktype(message, str, "message type must be bytes or str")
 
     _checktype(retries, int, "retries must be an int")
     if retries < 0:
@@ -36,9 +39,10 @@ def log_event(message, retries=10, wait=0.1):
     if wait < 0:
         raise ValueError("wait must be non-negative")
 
-    req = {}
-    req["message"] = message
-    req["timestamp"] = int(time.time() * 1000)
+    req = {
+        "message": message,
+        "timestamp": int(time.time() * 1000),
+    }
     return _request(req, retries, wait)
 
 
@@ -64,24 +68,21 @@ def _connect(retries, wait):
 
 
 def _request(req, retries, wait):
-    buf = json.dumps(req, indent=None) + "\n"
-    # dumps returns unicode with python3, but sock requires bytes
-    if isinstance(buf, str):
-        buf = buf.encode("utf-8")
+    buf = orjson.dumps(req) + b"\n"
 
     sock = _connect(retries, wait)
     sock.sendall(buf)
 
-    resp = ""
+    resp = b""
     while True:
         chunk = sock.recv(4000)
         if not chunk:
             raise Exception("no data")
-        resp += chunk.decode("utf-8")
-        if resp.endswith("\n"):
+        resp += chunk
+        if chunk.endswith(b"\n"):
             break
 
-    d = json.loads(resp[:-1])
+    d = orjson.loads(resp[:-1])
     if isinstance(d, dict):
         status = d["status"]
         if status == "ok":
