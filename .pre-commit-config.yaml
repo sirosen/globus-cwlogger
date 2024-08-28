@@ -1,5 +1,8 @@
 ci:
   autoupdate_schedule: "quarterly"
+  # at time of writing (2024-08-28), shellcheck is failing in pre-commit.ci
+  # with the message "Executable `docker` not found"
+  skip: [shellcheck]
 
 default_language_version:
   python: "python3.12"
