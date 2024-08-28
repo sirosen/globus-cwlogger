@@ -1,0 +1,59 @@
+name: "🧪 Test"
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  test:
+    name: "tox"
+    runs-on: "ubuntu-22.04"
+    fail-fast: false
+
+    steps:
+      - name: "Checkout the repo"
+        uses: "actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332" # v4.1.7
+
+      - name: "Setup Python"
+        id: "setup-python"
+        uses: "actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f" # v5.1.1
+        with:
+          python-version: |
+            3.8
+            3.9
+            3.10
+            3.11
+            3.12
+            3.13
+          allow-prereleases: true
+
+      - name: "Detect Pythons"
+        uses: "kurtmckee/detect-pythons@38187a5464f266e93e5c1467699f7be2bf521d2e" # v1.1.0
+
+      - name: "Restore cache"
+        id: "restore-cache"
+        uses: "actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9" # v4.0.2
+        with:
+          # The cache key includes the following to ensure it busts correctly:
+          #
+          # * All Python versions (detected by kurtmckee/detect-pythons, above)
+          #   This ensures that .venv/ symlinks to Python interpreters work.
+          # * The tox configuration (tox.ini)
+          # * The various `setup.*` files
+          #
+          key: "test-hash=${{ hashFiles('.python-identifiers', 'tox.ini', 'client/setup.py', 'daemon/setup.py') }}"
+          path: |
+            .tox/
+            .venv/
+
+      - name: "Create virtual environment"
+        if: "steps.restore-cache.outputs.cache-hit == false"
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip setuptools wheel
+          .venv/bin/python -m pip install tox
+
+      - name: "Run tests"
+        run: ".venv/bin/tox run"
