@@ -83,7 +83,7 @@ class _Batch:
     def get_records_for_boto(self):
         ret = []
         for r in self.records:
-            ret.append(dict(timestamp=r.timestamp, message=r.unicode_message))
+            ret.append({"timestamp": r.timestamp, "message": r.unicode_message})
         return ret
 
     @staticmethod
@@ -150,11 +150,11 @@ class LogWriter:
             raise ValueError("cannot flush with no events")
         while True:
             try:
-                kwargs = dict(
-                    logGroupName=self.group_name,
-                    logStreamName=self.stream_name,
-                    logEvents=events,
-                )
+                kwargs = {
+                    "logGroupName": self.group_name,
+                    "logStreamName": self.stream_name,
+                    "logEvents": events,
+                }
                 if self.sequence_token:
                     kwargs["sequenceToken"] = self.sequence_token
                 ret = self.client.put_log_events(**kwargs)

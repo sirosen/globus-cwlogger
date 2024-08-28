@@ -10,7 +10,7 @@ import socket
 import sys
 import threading
 import time
-import typing
+import typing as t
 
 import globus_cw_daemon.config as config
 import globus_cw_daemon.cwlogs as cwlogs
@@ -32,14 +32,14 @@ _log = logging.getLogger(__name__)
 
 # Data shared with flush thread
 _g_lock = threading.Lock()
-_g_queue: typing.List[cwlogs.Event] = []  # List of Events
+_g_queue: t.List[cwlogs.Event] = []  # List of Events
 _g_nr_dropped = 0
 
 # get constant instance_id on start
 try:
-    INSTANCE_ID: typing.Union[str, None] = os.readlink("/var/lib/cloud/instance").split(
-        "/"
-    )[-1]
+    INSTANCE_ID: t.Union[str, None] = os.readlink("/var/lib/cloud/instance").split("/")[
+        -1
+    ]
 except OSError:
     INSTANCE_ID = None
 
@@ -98,12 +98,12 @@ def _flush_thread_main(writer):
 
 
 def _get_drop_event(nr_dropped):
-    data = dict(
-        type="audit",
-        subtype="cwlogs.dropped",
-        dropped=nr_dropped,
-        instance_id=INSTANCE_ID,
-    )
+    data = {
+        "type": "audit",
+        "subtype": "cwlogs.dropped",
+        "dropped": nr_dropped,
+        "instance_id": INSTANCE_ID,
+    }
     ret = cwlogs.Event(timestamp=None, message=json.dumps(data))
     return ret
 
@@ -119,16 +119,16 @@ def _health_info(q_len=None):
     if q_len is None:
         q_len = len(_g_queue)  # no lock, but safe
     q_pct = (q_len / float(MAX_EVENT_QUEUE_LEN)) * 100
-    return dict(queue_length=q_len, queue_percent_full=q_pct)
+    return {"queue_length": q_len, "queue_percent_full": q_pct}
 
 
 def _get_heartbeat_event(nr_found):
-    data = dict(
-        type="audit",
-        subtype="cwlogs.heartbeat",
-        instance_id=INSTANCE_ID,
-        health=_health_info(nr_found),
-    )
+    data = {
+        "type": "audit",
+        "subtype": "cwlogs.heartbeat",
+        "instance_id": INSTANCE_ID,
+        "health": _health_info(nr_found),
+    }
     ret = cwlogs.Event(timestamp=None, message=json.dumps(data))
     return ret
 
@@ -153,10 +153,10 @@ def do_request(sock):
 
     try:
         _handle_request(d)
-        response = dict(status="ok", health=_health_info())
+        response = {"status": "ok", "health": _health_info()}
     except Exception as e:
         _log.exception("error %r", e)
-        response = dict(status="error", message=repr(e))
+        response = {"status": "error", "message": repr(e)}
 
     _log.debug("response: %r", response)
     buf = json.dumps(response, indent=None).encode("utf-8") + b"\n"

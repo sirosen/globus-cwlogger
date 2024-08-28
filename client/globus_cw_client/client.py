@@ -36,7 +36,7 @@ def log_event(message, retries=10, wait=0.1):
     if wait < 0:
         raise ValueError("wait must be non-negative")
 
-    req = dict()
+    req = {}
     req["message"] = message
     req["timestamp"] = int(time.time() * 1000)
     return _request(req, retries, wait)
