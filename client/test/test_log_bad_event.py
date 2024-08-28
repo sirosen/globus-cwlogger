@@ -1,5 +1,4 @@
 import pytest
-
 from globus_cw_client.client import log_event
 
 
