@@ -1,0 +1,46 @@
+# scriv
+# -----
+
+[tool.scriv]
+version = "command: grep -e 'version=' client/setup.py | grep -oPe '[\\d.]+'"
+categories = [
+    "Python support",
+    "Added",
+    "Fixed",
+    "Removed",
+    "Changed",
+    "Deprecated",
+    "Security",
+    "Development",
+]
+entry_title_template = "{{ version }} - {{ date.strftime('%Y-%m-%d') }}"
+format = "md"
+md_header_level = "2"
+fragment_directory = "changelog.d"
+insert_marker = "scriv-insert-here"
+main_branches = ["main"]
+
+
+# isort
+# -----
+
+[tool.isort]
+profile = "black"
+
+
+# mypy
+# ----
+
+[tool.mypy]
+ignore_missing_imports = true
+sqlite_cache = true
+
+
+# pytest
+# ------
+
+[tool.pytest.ini_options]
+addopts = "--color=yes"
+filterwarnings = [
+    "error",
+]

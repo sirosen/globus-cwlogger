@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+<!-- scriv-insert-here -->
+
 ## 1.2 - 2024-08-28
 
 * Close instantiated sockets on connection error to prevent `ResourceWarning`s.
@@ -24,6 +26,8 @@
   noise in syslog
 * local logging encodes priority levels for journald/syslog, can be handled via
   journald config as seen in daemon/globus_cw_daemon_install/example-journald.conf
+
+<!-- scriv-end-here -->
 
 ## beta-4
 
