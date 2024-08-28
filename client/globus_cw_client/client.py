@@ -53,6 +53,7 @@ def _connect(retries, wait):
         try:
             sock.connect(addr)
         except Exception as err:
+            sock.close()
             error = err
         else:
             return sock

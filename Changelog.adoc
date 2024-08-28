@@ -2,6 +2,8 @@
 
 == Unreleased
 
+* Close instantiated sockets on connection error to prevent `ResourceWarning`s.
+
 == 1.1
 
 * Drop client support for python2
