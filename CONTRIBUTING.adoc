@@ -32,11 +32,3 @@ Linting & Testing
 NOTE: Please do not reformat code cosmetically without discussing it
 beforehand. We do want to apply some code checkers and fixers, but as part of
 a carefully considered effort.
-
-
-Running a Release
------------------
-
-- Update the changelog to reflect the latest released version.
-- Cut a release branch (e.g. `release/beta-4`)
-- Notify via email that there's a new release, link to latest changelog
